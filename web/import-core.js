@@ -23,7 +23,10 @@
     for(const entry of entries){
       const found=next.base.find(row=>row.id===entry.id);
       const publications=found?.importedPublications||[];
-      if(publications.some(p=>p.fingerprint===entry.fingerprint)){duplicates++;continue;}
+      if(publications.some(p=>p.fingerprint===entry.fingerprint)){
+        found.importedPublications=publications.map(p=>p.fingerprint!==entry.fingerprint?p:{...p,lastImportedAt:now,lastImportedFile:file,...(entry.availabilityDate?{availabilityDate:entry.availabilityDate}:{})});
+        caseIds.push(entry.id);duplicates++;updated++;continue;
+      }
       caseIds.push(entry.id);
       const publication={fingerprint:entry.fingerprint,text:entry.text,file,importedAt:now,...(entry.availabilityDate?{availabilityDate:entry.availabilityDate}:{})};
       const origin=`Relatório AASP: ${file}\nImportado em: ${now}\n\n${entry.text}`;

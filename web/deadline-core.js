@@ -20,9 +20,9 @@
  function counts(list){const count={all:list.length,waiting:0,distributed:0,done:0,cancelled:0};for(const d of list)count[state(d)]++;return count;}
  function forImportDay(data,date){
   const imported=typeof module!=='undefined'&&module.exports?require('./imported-day-core'):root.ImportedDay;
-  const cases=imported.cases(data,date),ids=new Set(cases.map(b=>b.id));
-  const records=all(data).map(d=>{const {resolvedOwners,ownerAutomatic,resolvedClients,...raw}=d;return ownerAutomatic?{...raw,owner:''}:raw;}).filter(d=>!d.legacy&&ids.has(d.caseId)&&(d.importDay||day(d.sentAt||d.createdAt))===date);
-  for(const b of cases)if(!records.some(d=>d.caseId===b.id))records.push({id:'imported:'+b.id,caseId:b.id,title:'Publicação importada — definir providência',date:'',sentAt:(b.importedPublications||[]).filter(p=>day(p.importedAt)===date).at(-1)?.importedAt||'',owner:'',status:'pending',kind:'publication',imported:true});
+  const cases=imported.cases(data,date),ids=new Set(cases.map(b=>b.id)),repeatedDays=new Map(cases.map(b=>[b.id,new Set((b.importedPublications||[]).filter(p=>day(p.lastImportedAt)===date).map(p=>day(p.importedAt)))]));
+  const records=all(data).map(d=>{const {resolvedOwners,ownerAutomatic,resolvedClients,...raw}=d;return ownerAutomatic?{...raw,owner:''}:raw;}).filter(d=>{const recordDay=d.importDay||day(d.sentAt||d.createdAt);return !d.legacy&&ids.has(d.caseId)&&(recordDay===date||repeatedDays.get(d.caseId)?.has(recordDay));});
+  for(const b of cases)if(!records.some(d=>d.caseId===b.id))records.push({id:'imported:'+b.id,caseId:b.id,title:'Publicação importada — definir providência',date:'',sentAt:(b.importedPublications||[]).filter(p=>(day(p.importedAt)===date||day(p.lastImportedAt)===date)).at(-1)?.lastImportedAt||(b.importedPublications||[]).filter(p=>day(p.importedAt)===date).at(-1)?.importedAt||'',owner:'',status:'pending',kind:'publication',imported:true});
   return withResponsibles(data,records);
  }
  const api={state,day,all,assign,counts,forImportDay,withResponsibles};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DeadlineFlow=api;

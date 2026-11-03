@@ -48,7 +48,7 @@
       }
       review.innerHTML=candidates.map((entry,index)=>{
         const current=documentData.base.find(row=>row.id===entry.id),duplicate=current?.importedPublications?.some(p=>p.fingerprint===entry.fingerprint);
-        return `<article class="import-entry"><label class="import-select"><input type="checkbox" data-import-index="${index}" ${duplicate?'disabled':'checked'}> ${esc(entry.id)} <span class="badge">${duplicate?'Já importado':current?'Adicionar publicação ao processo':'Novo processo'}</span></label><p class="muted">${current?'O acompanhamento e os vínculos existentes serão preservados.':'Confira os campos antes de incluir. Cliente e responsável serão atribuídos em Gerenciar / detalhes.'}</p>${current?'':`<label>Evento / publicação<input data-field="event" data-index="${index}" value="${esc(entry.event)}" maxlength="300"></label><label>Partes<input data-field="parties" data-index="${index}" value="${esc(entry.parties)}" maxlength="1000"></label><label>Tribunal / vara<input data-field="court" data-index="${index}" value="${esc(entry.court)}" maxlength="300"></label><label>Datas da fonte<input data-field="dates" data-index="${index}" value="${esc(entry.dates)}" maxlength="300"></label>`}<details><summary>Conferir texto extraído</summary><pre class="import-source">${esc(entry.text)}</pre></details></article>`;
+        return `<article class="import-entry"><label class="import-select"><input type="checkbox" data-import-index="${index}" checked> ${esc(entry.id)} <span class="badge">${duplicate?'Atualizar existente, sem duplicar':current?'Adicionar publicação ao processo':'Novo processo'}</span></label><p class="muted">${current?'O acompanhamento e os vínculos existentes serão preservados.':'Confira os campos antes de incluir. Cliente e responsável serão atribuídos em Gerenciar / detalhes.'}</p>${current?'':`<label>Evento / publicação<input data-field="event" data-index="${index}" value="${esc(entry.event)}" maxlength="300"></label><label>Partes<input data-field="parties" data-index="${index}" value="${esc(entry.parties)}" maxlength="1000"></label><label>Tribunal / vara<input data-field="court" data-index="${index}" value="${esc(entry.court)}" maxlength="300"></label><label>Datas da fonte<input data-field="dates" data-index="${index}" value="${esc(entry.dates)}" maxlength="300"></label>`}<details><summary>Conferir texto extraído</summary><pre class="import-source">${esc(entry.text)}</pre></details></article>`;
       }).join('');
       announce(`${candidates.length} processo(s) identificado(s). Revise os números e os textos; desmarque referências que não devam ser importadas. Datas e prazos não são calculados automaticamente.`);
       updateSelection();
@@ -67,11 +67,10 @@
       for(const input of review.querySelectorAll(`[data-index="${index}"]`)){if(!input.value.trim()){input.focus();announce('Preencha os campos de revisão ou mantenha a indicação de conferência pendente.');return;}entry[input.dataset.field]=input.value.trim();}
     }
     const result=AASPImport.merge(documentData,selected,fileName,new Date().toISOString());
-    if(!result.added&&!result.updated){announce('As publicações selecionadas já foram importadas. Nenhuma alteração foi salva.');return;}
     busy=true;save.disabled=true;fileInput.disabled=true;$('cancel-import').disabled=true;announce('Salvando importação no Supabase…');
     try{
       await saveDashboard(result.next);mountDashboard();if(fromControl)window.showControlImportDay?.(DailyPublications.today());else if(window.showImportedDay)showImportedDay(DailyPublications.today());dialog.close();if(!fromControl&&window.queuePublicationEmails){const dates=[...new Set(selected.map(e=>e.availabilityDate||PublicationData.availabilityDate(e.text)).filter(Boolean))];await queuePublicationEmails(dates.length?dates:[DailyPublications.today()]);}
-      $('sync').textContent=`Importação salva: ${result.added} novo(s) processo(s), ${result.updated} atualizado(s).`;
+      $('sync').textContent=`Importação salva: ${result.added} novo(s) processo(s), ${result.updated} atualizado(s), incluindo ${result.duplicates} já importado(s), sem duplicação.`;
     }catch(error){announce(error.message);save.disabled=false;}
     finally{busy=false;fileInput.disabled=false;$('cancel-import').disabled=false;}
   };
