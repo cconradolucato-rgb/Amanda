@@ -1,12 +1,14 @@
 'use strict';
 (function(){
-  let candidates=[],fileName='',busy=false;
+  let candidates=[],fileName='',busy=false,fromControl=false;
   const dialog=$('import-dialog'),fileInput=$('report-file'),message=$('import-message'),review=$('import-review'),save=$('confirm-import');
   const announce=text=>{message.textContent=text;};
-  $('import-report').onclick=()=>{
+  function openImport(control=false){
+    fromControl=control;
     if(!session||!documentData){$('login-message').textContent='Entre com sua conta para importar relatórios.';$('email').focus();return;}
     candidates=[];$('import-publication-date').value='';fileInput.value='';review.replaceChildren();save.disabled=true;announce('Selecione o relatório baixado da AASP. Nada será salvo antes da confirmação.');dialog.showModal();
   };
+  $('import-report').onclick=()=>openImport(false);$('control-import-aasp').onclick=()=>openImport(true);
   $('cancel-import').onclick=()=>{if(!busy)dialog.close();};
   dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
   async function readPDF(file){
@@ -68,7 +70,7 @@
     if(!result.added&&!result.updated){announce('As publicações selecionadas já foram importadas. Nenhuma alteração foi salva.');return;}
     busy=true;save.disabled=true;fileInput.disabled=true;$('cancel-import').disabled=true;announce('Salvando importação no Supabase…');
     try{
-      await saveDashboard(result.next);mountDashboard();if(window.showImportedDay)showImportedDay(DailyPublications.today());dialog.close();if(window.queuePublicationEmails){const dates=[...new Set(selected.map(e=>e.availabilityDate||PublicationData.availabilityDate(e.text)).filter(Boolean))];await queuePublicationEmails(dates.length?dates:[DailyPublications.today()]);}
+      await saveDashboard(result.next);mountDashboard();if(fromControl)window.showControlImportDay?.(DailyPublications.today());else if(window.showImportedDay)showImportedDay(DailyPublications.today());dialog.close();if(!fromControl&&window.queuePublicationEmails){const dates=[...new Set(selected.map(e=>e.availabilityDate||PublicationData.availabilityDate(e.text)).filter(Boolean))];await queuePublicationEmails(dates.length?dates:[DailyPublications.today()]);}
       $('sync').textContent=`Importação salva: ${result.added} novo(s) processo(s), ${result.updated} atualizado(s).`;
     }catch(error){announce(error.message);save.disabled=false;}
     finally{busy=false;fileInput.disabled=false;$('cancel-import').disabled=false;}
