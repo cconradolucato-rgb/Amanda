@@ -1,0 +1,65 @@
+/* O cabeçalho mantém a identidade azul e dourada nos dois temas. */
+#theme-toggle{display:flex;align-items:center;justify-content:center;gap:9px;margin:12px 0 0 auto;padding:6px 11px;min-height:40px;color:#f5dda5;background:#182e40;border:1px solid #c6a25b88;border-radius:22px;font-size:12px;letter-spacing:0;box-shadow:none}
+#theme-toggle:hover{background:#233e53}#theme-toggle:focus-visible{outline:3px solid #f5dda5;outline-offset:3px}
+.theme-symbols{display:flex;align-items:center;gap:4px}.theme-symbols svg{width:26px;height:26px;padding:4px;border-radius:50%;opacity:.5}.theme-sun{background:#f1d38c;color:#152d40;opacity:1!important}
+[data-theme=dark] .theme-sun{background:transparent;color:inherit;opacity:.5!important}[data-theme=dark] .theme-moon{background:#f1d38c;color:#152d40;opacity:1}
+:root[data-theme=dark]{color-scheme:dark;--bg:#101c28;--ink:#e4edf4;--muted:#b1c1ce;--line:#3c5062;--surface:#1b2d3c;--blue:#446b89;--gold:#e0bd70}
+[data-theme=dark] body{background:var(--bg);color:var(--ink)}
+[data-theme=dark] h1,[data-theme=dark] h2,[data-theme=dark] h3,[data-theme=dark] .cases-area h2,[data-theme=dark] .stat b{color:#f0d899;text-shadow:none}
+[data-theme=dark] .panel,[data-theme=dark] .stat,[data-theme=dark] dialog{background:var(--surface);color:var(--ink);border-color:var(--line);box-shadow:0 4px 20px #0002}
+[data-theme=dark] .case-controls,[data-theme=dark] .cases-area tr,[data-theme=dark] .portfolio-lawyer,[data-theme=dark] .portfolio-client,[data-theme=dark] .deadline-item{background:#1b2d3c;border-color:var(--line);color:var(--ink)}
+[data-theme=dark] .case-controls::before{background:var(--bg)}
+[data-theme=dark] .portfolio-lawyer summary,[data-theme=dark] dialog label,[data-theme=dark] .history-timeline strong,[data-theme=dark] .court-coverage>summary,[data-theme=dark] .history-section>summary{color:#e1ebf3}
+[data-theme=dark] .muted,[data-theme=dark] td small,[data-theme=dark] .portfolio-lawyer summary .muted,[data-theme=dark] .process-count,[data-theme=dark] .process-state,[data-theme=dark] .note-meta,[data-theme=dark] .history-fields dt,[data-theme=dark] .history-timeline time,[data-theme=dark] .foot,[data-theme=dark] .release-info,[data-theme=dark] #sync{color:var(--muted)}
+[data-theme=dark] input,[data-theme=dark] select,[data-theme=dark] textarea,[data-theme=dark] select option{background:#122330;color:var(--ink);border-color:#50677a;box-shadow:none}
+[data-theme=dark] input::placeholder,[data-theme=dark] textarea::placeholder{color:#a5b7c6;opacity:1}
+[data-theme=dark] button{background:#263f53;color:#e5edf4;border-color:#536b7e;box-shadow:none}
+[data-theme=dark] button:hover{background:#304f67;filter:none}
+[data-theme=dark] button.primary,[data-theme=dark] .portfolio-client[aria-pressed=true]{background:var(--metal);color:#192b39;border-color:#c6a25b}
+[data-theme=dark] button.stat[aria-pressed=true]{background:#354432;outline-color:#dfbd78}
+[data-theme=dark] .badge,[data-theme=dark] .cases-area .case-state-trigger{background:#283e51;color:#dfebf4;border-color:#52697c}
+[data-theme=dark] .badge.high{background:#4a3b23;color:#ffe0a1;border-color:#8e7040}
+[data-theme=dark] .badge.ok{background:#173e31;color:#b6f1cf;border-color:#498364}
+[data-theme=dark] .pending,[data-theme=dark] .client-filter,[data-theme=dark] .cases-area td::before,[data-theme=dark] .activity-dot{color:#e4c88e}
+[data-theme=dark] .source,[data-theme=dark] .saved-note,[data-theme=dark] .history-data,[data-theme=dark] .import-source,[data-theme=dark] .activity-entry,[data-theme=dark] .control-stats span,[data-theme=dark] #profile-initials,[data-theme=dark] #profile-email{background:#142533;color:var(--ink);border-color:var(--line)}
+[data-theme=dark] .notice,[data-theme=dark] .history-limit,[data-theme=dark] .deadline-alerts,[data-theme=dark] .deadline-item.today,[data-theme=dark] #forward-message:not(:empty){background:#3b3324;color:#f3dfb3;border-color:#937d4c}
+[data-theme=dark] .notice strong,[data-theme=dark] .deadline-alerts strong,[data-theme=dark] .deadline-alerts span{color:#f3dfb3}
+[data-theme=dark] .deadline-alerts.has-overdue,[data-theme=dark] .deadline-item.overdue,[data-theme=dark] #forward-message[data-result="failed"],[data-theme=dark] #forward-message[data-result^="blocked"],[data-theme=dark] #forward-message[data-result="unknown"]{background:#451f27;color:#ffd6d9;border-color:#bc6470;border-left-color:#f17885}
+[data-theme=dark] .deadline-alerts.has-overdue strong,[data-theme=dark] .deadline-alerts.has-overdue span,[data-theme=dark] .deadline-item.overdue h3,[data-theme=dark] .deadline-item.overdue>p>strong{color:#ffd6d9}
+[data-theme=dark] .deadline-item.overdue>.badge{background:#632c37;color:#ffe1e5}
+[data-theme=dark] #forward-message[data-result="accepted"]{background:#173e31;color:#c8f5dc;border-color:#498364}
+[data-theme=dark] .activity-entry summary,[data-theme=dark] .saved-note a,[data-theme=dark] .history-source a,[data-theme=dark] .integration-links a,[data-theme=dark] #integration-courts a,[data-theme=dark] .client-link-item summary{color:#9bcfff}
+[data-theme=dark] .court-access-link,[data-theme=dark] .tribunal-button{background:#273b48;color:#f1dba5;border-color:#8b7851}
+[data-theme=dark] .case-view-actions #open-activity-calendar{background:#263f53;color:#e5edf4;border-color:#536b7e}
+[data-theme=dark] .portfolio-lawyer.has-deadlines-today{background:#403723;border-color:#ad8c49}
+[data-theme=dark] .coverage-row,[data-theme=dark] .cases-area td:nth-child(n+3),[data-theme=dark] .history-section,[data-theme=dark] .history-party,[data-theme=dark] .foot,[data-theme=dark] #forward-dialog section{border-color:var(--line)}
+[data-theme=dark] th{background:#263f53;color:#e2c992;border-color:var(--line)}[data-theme=dark] tbody tr:nth-child(even),[data-theme=dark] tbody tr:hover{background:#203746}
+[data-theme=dark] #import-dialog .actions{background:#1b2d3c}
+[data-theme=dark] #account-message:not(:empty),[data-theme=dark] #signup-message:not(:empty),[data-theme=dark] #portfolio-message:not(:empty),[data-theme=dark] #control-message:not(:empty),[data-theme=dark] #deadline-message:not(:empty){background:#263f53;color:var(--ink)}
+[data-theme=dark] .portfolios-panel{scrollbar-color:#c6a25b #1b2d3c}
+/* A identidade da faixa superior permanece legível. */
+[data-theme=dark] #session-bar{background:transparent!important;color:#e5d6b3}
+[data-theme=dark] #theme-toggle{background:#182e40;color:#f5dda5;border-color:#c6a25b88}
+@media(max-width:650px){#theme-toggle{display:inline-flex;margin:10px 0 0 0}.header-context{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.header-context small{margin-left:0}}
+@media(forced-colors:active){.theme-symbols svg{background:Canvas!important;color:CanvasText!important}#theme-toggle [class^=theme-]{forced-color-adjust:auto}}
+@media(max-width:700px){.header-account-actions{flex-wrap:wrap;max-width:100%;gap:8px}.brand-strip{flex-wrap:wrap}.header-user-info{min-width:0;overflow-wrap:anywhere}}
+
+.case-loading-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:12px}
+/* Todas as superfícies auxiliares seguem a mesma paleta, inclusive estados selecionados. */
+[data-theme=dark] .cases-area .case-card-footer{background:#142533;border-color:var(--line)}
+[data-theme=dark] .cases-area .case-card-footer button{background:#263f53;color:#e5edf4;border-color:#536b7e}
+[data-theme=dark] .cases-area .case-card-footer button:hover{background:#304f67}
+[data-theme=dark] .portfolio-lawyer,[data-theme=dark] .portfolio-lawyer.has-deadlines-today{box-shadow:none}
+[data-theme=dark] .portfolio-daily-publications{background:#403723;color:#f3dfb3;border-color:#937d4c}
+[data-theme=dark] .mail-history-item{background:#142533;color:var(--ink)}
+[data-theme=dark] #activity-calendar-grid button[data-has-publications="false"]{background:#142533;color:#b1c1ce;border-color:var(--line)}
+[data-theme=dark] #activity-calendar-grid button[data-has-publications="true"]{background:#403723;color:#f3dfb3;border-color:#937d4c}
+[data-theme=dark] #activity-calendar-grid button[aria-pressed="true"]{background:#37556c;color:#fff;border-color:#dfbd78;box-shadow:inset 0 0 0 1px #dfbd78}
+[data-theme=dark] .activity-count,[data-theme=dark] .calendar-legend{color:var(--muted)}
+[data-theme=dark] .calendar-legend>span{color:#e4c88e}
+[data-theme=dark] .note-gallery img{background:#142533}
+[data-theme=dark] .login-password-control #toggle-password,[data-theme=dark] #close-signup{color:#b1c1ce}
+[data-theme=dark] .login-password-control #toggle-password:hover,[data-theme=dark] #close-signup:hover{background:#304f67}
+[data-theme=dark] .tribunal-button:hover{background:#3c4d55;color:#ffe6b4}
+[data-theme=dark] #control-badge:not(:empty){background:#4a3b23;color:#ffe0a1}
+[data-theme=dark] #open-control.has-overdue #control-badge{background:#a72e40;color:#fff}

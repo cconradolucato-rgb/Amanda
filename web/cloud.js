@@ -14,32 +14,64 @@ async function request(path,options={},authenticated=true){
   }
   const response=await fetch(config.url+path,{...options,headers:{apikey:config.key,'Content-Type':'application/json',...(authenticated?{Authorization:`Bearer ${session.access_token}`} : {}),...options.headers},signal:AbortSignal.timeout(20000)});
   let body;try{body=await response.json()}catch{body=null}
-  if(!response.ok){if(response.status===401||response.status===403)throw Error('Acesso não autorizado ou sessão expirada. Saia e entre novamente.');throw Error('Não foi possível concluir a operação no Supabase. Verifique a conexão e a configuração do banco.');}
+  if(!response.ok){
+    const authErrors={invalid_credentials:'E-mail ou senha atual incorretos.',weak_password:'A nova senha não atende às regras de segurança da conta. Escolha uma senha mais forte.',same_password:'Escolha uma senha diferente da senha atual.',reauthentication_needed:'A conta exige verificação adicional. Saia, entre novamente e tente alterar a senha.',reauthentication_not_valid:'Verificação da conta expirada. Entre novamente antes de alterar a senha.',over_request_rate_limit:'Muitas tentativas. Aguarde alguns minutos e tente novamente.',over_email_send_rate_limit:'O limite de envio de e-mails foi atingido. Aguarde antes de tentar novamente.',email_address_invalid:'Confira o endereço de e-mail informado.',email_address_not_authorized:'O Supabase não autorizou o envio de confirmação para este endereço. O administrador precisa revisar o serviço de e-mail do projeto.',email_not_confirmed:'Confirme seu e-mail antes de entrar. Use o link enviado pelo Supabase.',user_already_exists:'Esta conta já existe. Entre com sua senha.',signup_disabled:'O cadastro de novas contas está desativado no Supabase. Solicite a liberação ao escritório.'};
+    if(authErrors[body?.error_code||body?.code])throw Error(authErrors[body.error_code||body.code]);
+    if(response.status===401||response.status===403)throw Error('Acesso não autorizado ou sessão expirada. Saia e entre novamente.');throw Error('Não foi possível concluir a operação no Supabase. Verifique a conexão e a configuração do banco.');}
+  if(authenticated&&options.method&&path.startsWith('/auth/v1/user'))window.auditEvent?.('connection','Configuração da conta atualizada',{status:'success',details:'Dados da conta alterados. Senhas e tokens não são registrados.'});
   return body;
 }
-async function saveDashboard(next){
+let dashboardMutation=Promise.resolve(),dashboardRequiresReload=false;
+function queueDashboardMutation(task){const result=dashboardMutation.then(task,task);dashboardMutation=result.catch(()=>{});return result;}
+function saveDashboard(next){return queueDashboardMutation(()=>persistDashboard(next));}
+async function persistDashboard(next){
+  if(dashboardRequiresReload)throw Error('A carteira foi alterada em outra sessão. Recarregue a página antes de salvar para preservar as alterações da equipe.');
+  next={...next,activityLog:[...new Map([...(documentData.activityLog||[]),...(next.activityLog||[])].map(e=>[e.id,e])).values()]};
+  next=OfficeActivity.recordActivity(documentData,next,session.user);
   $('sync').textContent='Salvando…';
   try{
     const rows=await request(`/rest/v1/dashboards?id=eq.1&revision=eq.${revision}`,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({data:next,revision:revision+1})});
     if(!Array.isArray(rows)||rows.length!==1)throw Error('Os dados foram alterados em outra janela. Recarregue os dados antes de salvar novamente.');
-    documentData=rows[0].data;revision=rows[0].revision;$('sync').textContent='Salvo na nuvem';
-  }catch(error){$('sync').textContent='Não salvo — verifique a conexão ou recarregue';throw error;}
+    documentData=await PublicationData.hydrate(rows[0].data);revision=rows[0].revision;$('sync').textContent='Salvo na nuvem';window.dispatchEvent(new Event('dashboard-saved'));
+  }catch(error){$('sync').textContent='Não salvo — verifique a conexão ou recarregue';window.auditEvent?.('error','Alterações não foram salvas',{status:'failure',details:error.message});throw error;}
 }
 async function loadDashboard(){
-  const rows=await request('/rest/v1/dashboards?id=eq.1&select=data,revision');
+  let rows,officeWarning=false;
+  try{
+    const response=await fetch('/api/office-updates',{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`},signal:AbortSignal.timeout(20000)});
+    if(!response.ok)throw Error('Sincronização pendente');const result=await response.json();
+    if(!Array.isArray(result.rows)||result.rows.length!==1)throw Error('Resposta inválida');rows=result.rows;
+  }catch{officeWarning=true;rows=await request('/rest/v1/dashboards?id=eq.1&select=data,revision');}
   if(!Array.isArray(rows)||rows.length!==1)throw Error('Conta sem acesso liberado ou banco ainda não configurado.');
-  documentData=rows[0].data;revision=rows[0].revision;
+  documentData=await PublicationData.hydrate(rows[0].data);revision=rows[0].revision;
   if(!Array.isArray(documentData.base)||!Array.isArray(documentData.portfolios))throw Error('Dados do dashboard incompletos.');
-  mountDashboard();$('login').hidden=true;document.querySelector('main').hidden=false;$('session-bar').hidden=false;
-  $('session-email').textContent=session.user?.email||'Conta autorizada';$('sync').textContent='Dados carregados da nuvem';
+  mountDashboard();$('login').hidden=true;$('publications-page').hidden=false;$('session-bar').hidden=false;
+  $('session-email').textContent=session.user?.email||'Conta autorizada';if(window.renderAccountIdentity)window.renderAccountIdentity();$('sync').textContent=officeWarning?'Dados carregados. Atualização da carteira pendente; recarregue para tentar novamente.':'Dados carregados da nuvem';window.dispatchEvent(new Event('dashboard-ready'));
 }
+function setPasswordVisible(visible){
+  $('password').type=visible?'text':'password';
+  $('toggle-password').setAttribute('aria-label',visible?'Ocultar senha':'Mostrar senha');$('toggle-password').title=visible?'Ocultar senha':'Mostrar senha';
+  $('toggle-password').setAttribute('aria-pressed',String(visible));
+}
+$('toggle-password').onclick=()=>setPasswordVisible($('password').type==='password');
 $('login-form').onsubmit=async event=>{
-  event.preventDefault();const button=$('login-form').querySelector('button');button.disabled=true;$('login-message').textContent='Entrando…';
+  event.preventDefault();const button=$('login-form').querySelector('[type=submit]');button.disabled=true;$('login-message').textContent='Entrando…';
   try{
     const result=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})},false);
-    storeSession({...result,expires_at:Math.floor(Date.now()/1000)+result.expires_in});$('password').value='';await loadDashboard();
+    storeSession({...result,expires_at:Math.floor(Date.now()/1000)+result.expires_in});$('password').value='';setPasswordVisible(false);await loadDashboard();
   }catch(error){$('login-message').textContent=error.message;}finally{button.disabled=false;}
 };
-$('logout').onclick=async()=>{try{await request('/auth/v1/logout',{method:'POST'})}catch{}finally{storeSession(null);location.reload();}};
-$('reload').onclick=()=>{if(confirm('Recarregar os dados da nuvem? Preenchimentos ainda não salvos serão descartados.'))location.reload();};
-(async()=>{try{const value=sessionStorage.getItem('dibbern-session');if(value){session=JSON.parse(value);await loadDashboard();}}catch(error){$('login-message').textContent=error.message;}})();
+$('logout').onclick=async()=>{await window.auditEvent?.('session','Saída da conta solicitada',{status:'info'});try{await request('/auth/v1/logout',{method:'POST'})}catch{}finally{storeSession(null);location.reload();}};
+(async()=>{try{
+  const callback=new URLSearchParams(location.hash.slice(1));
+  if(callback.has('access_token')&&callback.has('refresh_token')){
+    const accessToken=callback.get('access_token'),refreshToken=callback.get('refresh_token');
+    history.replaceState(null,'',location.pathname+location.search);
+    const user=await request('/auth/v1/user',{headers:{Authorization:`Bearer ${accessToken}`}},false);
+    storeSession({access_token:accessToken,refresh_token:refreshToken,user,expires_at:Math.floor(Date.now()/1000)+(Number(callback.get('expires_in'))||3600)});
+    await loadDashboard();
+  }else{
+    if(callback.has('error')){history.replaceState(null,'',location.pathname+location.search);$('login-message').textContent='O link de confirmação expirou ou não é válido. Tente entrar após confirmar sua conta ou solicite ajuda ao escritório.';}
+    const value=sessionStorage.getItem('dibbern-session');if(value){session=JSON.parse(value);await loadDashboard();}
+  }
+}catch(error){$('login-message').textContent=error.message;}})();

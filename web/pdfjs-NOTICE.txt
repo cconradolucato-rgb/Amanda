@@ -1,0 +1,5 @@
+PDF.js (pdfjs-dist) 6.4.299
+Source: https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.4.299.tgz
+Vendored files: pdf.min.mjs, pdf.worker.min.mjs
+License: Apache-2.0; see pdfjs-LICENSE.txt.
+Installed using npm with registry integrity verification.

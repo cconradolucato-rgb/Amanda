@@ -1,0 +1,21 @@
+'use strict';
+(function(root){
+ function isoDate(value){const text=String(value||'').trim();const match=text.match(/^(\d{4})-(\d{2})-(\d{2})$/)||text.match(/^(\d{2})[./-](\d{2})[./-](\d{4})$/);if(!match)return '';const [y,m,d]=match[1].length===4?[+match[1],+match[2],+match[3]]:[+match[3],+match[2],+match[1]];const date=new Date(Date.UTC(y,m-1,d));return date.getUTCFullYear()===y&&date.getUTCMonth()===m-1&&date.getUTCDate()===d?`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`:'';}
+ function availabilityDate(text){const values=[...String(text||'').matchAll(/(?:data\s+(?:de\s+)?)?disponibiliza[çc][aã]o\s*[:\-]?\s*(\d{2}\/\d{2}\/\d{4})/gi)].map(m=>isoDate(m[1])).filter(Boolean);return new Set(values).size===1?values[0]:'';}
+ function references(text){const out=[];for(const m of String(text||'').matchAll(/publica(?:ç(?:ão|ões)|c(?:ao|oes))\s*(?:n[.º°o]*\s*)?[:#\-]?\s*(\d{1,10}(?:\s*(?:,|;|e|\/)\s*\d{1,10})*)/gi))for(const id of m[1].match(/\d+/g)||[])if(!out.includes(id))out.push(id);return out;}
+ function collectPublications(data){
+  const entries=[],seen=new Set();
+  for(const report of data.publicationReports||[]){const date=isoDate(report.availableOn||report.publishedOn);if(!date)continue;const cases=(report.caseIds||[]).map(id=>{const b=data.base.find(b=>b.id===id);return b?{id,title:b.event||'Publicação',refs:references(String(b.source||'').split('--- Nova publicação importada ---')[0]),text:String(b.source||'').split('--- Nova publicação importada ---')[0]}:null;}).filter(Boolean);for(const item of cases)for(const ref of item.refs)seen.add(date+'|'+item.id+'|'+ref);entries.push({id:report.id,on:date,count:report.publicationCount||cases.length,title:report.file||'Relatório AASP',dateKind:report.availableOn?'Disponibilização':'Publicação',cases});}
+  for(const base of data.base||[])for(const p of base.importedPublications||[]){const date=isoDate(p.availabilityDate)||isoDate(p.publicationDate)||availabilityDate(p.text);if(!date)continue;const refs=p.externalId?[]:references(p.text),ids=refs.length?refs:['bloco:'+(p.fingerprint||p.text)];const unique=ids.filter(ref=>{const key=date+'|'+base.id+'|'+ref;if(seen.has(key))return false;seen.add(key);return true;});if(!unique.length)continue;entries.push({id:p.fingerprint||base.id+'-'+date,on:date,count:unique.length,title:p.file||'Publicação importada',dateKind:p.availabilityDate||!p.publicationDate&&availabilityDate(p.text)?'Disponibilização':'Publicação',cases:[{id:base.id,title:base.event||'Publicação',refs:refs.filter(r=>unique.includes(r)),text:p.text||''}],countKind:refs.length?'publicações':'bloco(s) de texto'});}
+  return entries;
+ }
+ const packedCache=new WeakMap();
+ function courtPublications(data){if(Array.isArray(data.courtPublications))return data.courtPublications;if(!data.courtPublicationsPacked)return [];if(packedCache.has(data))return packedCache.get(data);if(typeof module!=='undefined'&&module.exports){const rows=JSON.parse(require('node:zlib').gunzipSync(Buffer.from(data.courtPublicationsPacked,'base64')).toString('utf8'));packedCache.set(data,rows);return rows;}return [];}
+ let lastPacked='',lastHydration=null;
+ async function hydrate(data){if(!data.courtPublicationsPacked||Array.isArray(data.courtPublications))return data;const packed=data.courtPublicationsPacked;
+  if(lastPacked!==packed||!lastHydration){lastPacked=packed;lastHydration=(async()=>{const bytes=Uint8Array.from(atob(packed),c=>c.charCodeAt(0));const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));return JSON.parse(await new Response(stream).text());})();lastHydration.catch(()=>{if(lastPacked===packed){lastPacked='';lastHydration=null;}});}
+  const rows=await lastHydration;Object.defineProperty(data,'courtPublications',{value:rows,enumerable:false,configurable:true});return data;
+ }
+
+ const api={courtPublications,hydrate,isoDate,availabilityDate,references,collectPublications};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.PublicationData=api;
+})(typeof window==='undefined'?globalThis:window);
