@@ -70,6 +70,15 @@
    const b=documentData.base.find(b=>b.id===d.caseId),a=documentData.annotations?.[d.caseId]||{},match=status==='all'||status==='pending'&&d.status==='pending'||status==='overdue'&&overdue(d,now)||status==='today'&&d.status==='pending'&&d.date===now.date||DeadlineFlow.state(d)===status;
    return (!owner||d.owner===owner)&&match&&(!query||[d.caseId,d.title,d.owner,d.reference,a.client,...(a.portfolioClients||[]),b?.parties,b?.event,b?.source,...(b?.importedPublications||[]).map(p=>p.text)].join(' ').toLocaleLowerCase('pt-BR').includes(query));
   });
+  $('export-control').disabled=!list.length;
+  $('export-control').onclick=()=>{
+   const rows=[['Lote importado em','Processo','Cliente / partes','Publicação / providência','Advogado responsável','Data de envio','Vencimento','Horário','Distribuído em','Status','Lido em','Referência','Texto AASP'],...list.map(d=>{
+    const b=documentData.base.find(b=>b.id===d.caseId),a=documentData.annotations?.[d.caseId]||{};
+    return [batchDate,d.caseId,a.client||a.portfolioClients?.join(' / ')||b?.parties||'',d.title,d.owner,DeadlineFlow.day(d.sentAt),d.date,d.time,d.assignedAt?stamp(d.assignedAt):'',{waiting:'Aguardando distribuição',distributed:'Distribuído',done:'Concluído',cancelled:'Cancelado'}[DeadlineFlow.state(d)],d.readAt?stamp(d.readAt):'',d.reference,(b?.importedPublications||[]).filter(p=>!batchDate||ImportedDay.day(p.importedAt)===batchDate).map(p=>p.text).join('\n\n')];
+   })];
+   const csv='\ufeff'+rows.map(row=>row.map(value=>'"'+String(value??'').replace(/^[\s]*[=+@-]/,"'$&").replaceAll('"','""')+'"').join(';')).join('\r\n');
+   const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download='controladoria-'+(batchDate||'arquivo-completo')+'.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  };
   const pending=list.filter(d=>d.status==='pending'),late=pending.filter(d=>overdue(d,now)),today=pending.filter(d=>d.date===now.date&&!overdue(d,now));
   $('control-count').textContent=`${list.length} de ${all.length} prazo(s) cadastrado(s).${counts.cancelled?' '+counts.cancelled+' cancelado(s) no total.':''}`;
   $('control-stats').innerHTML=`<span><b>${late.length}</b> vencido(s)</span><span><b>${today.length}</b> vence(m) hoje</span><span><b>${pending.length}</b> pendente(s) nesta visão</span>`;
