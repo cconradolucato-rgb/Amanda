@@ -1,10 +1,12 @@
 'use strict';
 (function(root){
+ const dayFormatter=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'});
  function state(d){return d.status==='done'?'done':d.status==='cancelled'?'cancelled':d.owner?.trim()?'distributed':'waiting';}
- function day(at){const d=new Date(/^\d{4}-\d{2}-\d{2}$/.test(at||'')?at+'T12:00:00-03:00':at);if(!at||!Number.isFinite(d.getTime()))return '';const p=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d).map(p=>[p.type,p.value]));return `${p.year}-${p.month}-${p.day}`;}
+ function day(at){const d=new Date(/^\d{4}-\d{2}-\d{2}$/.test(at||'')?at+'T12:00:00-03:00':at);if(!at||!Number.isFinite(d.getTime()))return '';const p=Object.fromEntries(dayFormatter.formatToParts(d).map(p=>[p.type,p.value]));return `${p.year}-${p.month}-${p.day}`;}
+ const linkCache=new WeakMap();
  function withResponsibles(data,list){
   const links=typeof module!=='undefined'&&module.exports?require('./portfolio-links'):root.PortfolioLinks;
-  const annotations=links.applyPortfolioLinks(data).data.annotations||{};
+  if(!linkCache.has(data))linkCache.set(data,links.applyPortfolioLinks(data).data.annotations||{});const annotations=linkCache.get(data);
   return list.map(d=>{const a=annotations[d.caseId]||{},explicit=!!d.owner?.trim(),cleared=d.responsibleOverride||d.assignmentHistory?.at(-1)?.to===null;
    const owners=explicit?[d.owner]:cleared?[]:[...new Set([...(a.owners?.length?a.owners:a.owner?[a.owner]:[]),...(a.portfolioOwners||[])])];
    return {...d,owner:owners.join(' / '),resolvedOwners:owners,ownerAutomatic:!explicit&&owners.length>0,resolvedClients:[...new Set([...(a.clientNames||[]),...(a.portfolioClients||[]),...(a.client?[a.client]:[])])]};

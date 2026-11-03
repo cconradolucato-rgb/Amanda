@@ -48,6 +48,9 @@
     },
     "api/publication-ingest.js": {
       "maxDuration": 60
+    },
+    "api/analyze-publication.js": {
+      "maxDuration": 60
     }
   },
   "crons": [
