@@ -54,12 +54,20 @@ function setPasswordVisible(visible){
   $('toggle-password').setAttribute('aria-pressed',String(visible));
 }
 $('toggle-password').onclick=()=>setPasswordVisible($('password').type==='password');
+let loginBusy=false,loginNeedsDashboard=false;
+function loginRetry(value){loginNeedsDashboard=value;$('password').required=!value;$('login-submit').textContent=value?'Tentar carregar painel':'Entrar';}
+for(const id of ['email','password'])$(id).addEventListener('input',()=>{if(!loginBusy)loginRetry(false);});
 $('login-form').onsubmit=async event=>{
-  event.preventDefault();const button=$('login-form').querySelector('[type=submit]');button.disabled=true;$('login-message').textContent='Entrando…';
+  event.preventDefault();if(loginBusy)return;loginBusy=true;const button=$('login-submit');button.disabled=true;$('email').readOnly=true;$('password').readOnly=true;
   try{
-    const result=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})},false);
-    storeSession({...result,expires_at:Math.floor(Date.now()/1000)+result.expires_in});$('password').value='';setPasswordVisible(false);await loadDashboard();
-  }catch(error){$('login-message').textContent=error.message;}finally{button.disabled=false;}
+    if(!loginNeedsDashboard){
+      $('login-message').textContent='Verificando acesso…';
+      const result=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})},false);
+      storeSession({...result,expires_at:Math.floor(Date.now()/1000)+result.expires_in});loginRetry(true);
+    }
+    $('login-message').textContent='Acesso confirmado. Carregando painel…';await loadDashboard();
+    $('password').value='';setPasswordVisible(false);loginRetry(false);$('login-message').textContent='';
+  }catch(error){$('login-message').textContent=(loginNeedsDashboard?'Seu acesso foi confirmado, mas o painel não carregou. Tente carregar novamente. ':'')+error.message;}finally{loginBusy=false;button.disabled=false;$('email').readOnly=false;$('password').readOnly=false;}
 };
 $('logout').onclick=async()=>{await window.auditEvent?.('session','Saída da conta solicitada',{status:'info'});try{await request('/auth/v1/logout',{method:'POST'})}catch{}finally{storeSession(null);location.reload();}};
 (async()=>{try{
@@ -74,4 +82,4 @@ $('logout').onclick=async()=>{await window.auditEvent?.('session','Saída da con
     if(callback.has('error')){history.replaceState(null,'',location.pathname+location.search);$('login-message').textContent='O link de confirmação expirou ou não é válido. Tente entrar após confirmar sua conta ou solicite ajuda ao escritório.';}
     const value=sessionStorage.getItem('dibbern-session');if(value){session=JSON.parse(value);await loadDashboard();}
   }
-}catch(error){$('login-message').textContent=error.message;}})();
+}catch(error){if(session?.access_token)loginRetry(true);$('login-message').textContent=error.message;}})();

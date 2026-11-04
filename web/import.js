@@ -13,7 +13,7 @@
   dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
   async function readPDF(file){
     const pdfjs=await import('./pdf.min.mjs');
-    pdfjs.GlobalWorkerOptions.workerSrc='./pdf.worker.min.mjs';
+    pdfjs.GlobalWorkerOptions.workerSrc=new URL('./pdf.worker.min.mjs',new URL('/import.js',location.origin)).href;
     const task=pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false,useSystemFonts:true,disableFontFace:true});
     let pdf;
     try{
@@ -52,7 +52,7 @@
       }).join('');
       announce(`${candidates.length} processo(s) identificado(s). Revise os números e os textos; desmarque referências que não devam ser importadas. Datas e prazos não são calculados automaticamente.`);
       updateSelection();
-    }catch(error){announce(error.name==='PasswordException'?'PDF protegido por senha. Envie uma cópia desbloqueada.':error.message||'Não foi possível ler o relatório.');}
+    }catch(error){fileInput.value='';const readerUnavailable=/worker|fetch|dynamically imported module/i.test(error.message||'');announce(error.name==='PasswordException'?'PDF protegido por senha. Envie uma cópia desbloqueada.':error.name==='InvalidPDFException'?'O PDF está inválido ou incompleto. Baixe o arquivo novamente na AASP e tente importar.':readerUnavailable?'Não foi possível carregar o leitor de PDF. Atualize a página e selecione o arquivo novamente.':error.message||'Não foi possível ler o relatório.');}
     finally{busy=false;fileInput.disabled=false;$('cancel-import').disabled=false;}
   };
   function updateSelection(){const n=review.querySelectorAll('[data-import-index]:checked').length;save.disabled=!n;save.textContent=`Confirmar importação${n?` (${n})`:''}`;}
