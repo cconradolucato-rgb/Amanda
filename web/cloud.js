@@ -24,6 +24,22 @@ async function request(path,options={},authenticated=true){
 let dashboardMutation=Promise.resolve(),dashboardRequiresReload=false;
 function queueDashboardMutation(task){const result=dashboardMutation.then(task,task);dashboardMutation=result.catch(()=>{});return result;}
 function saveDashboard(next){return queueDashboardMutation(()=>persistDashboard(next));}
+function updateDashboard(transform){return queueDashboardMutation(async()=>{
+  $('sync').textContent='Atualizando carteira para importar…';
+  try{
+    for(let attempt=0;attempt<4;attempt++){
+      const rows=await request('/rest/v1/dashboards?id=eq.1&select=data,revision');
+      if(!Array.isArray(rows)||rows.length!==1||!Array.isArray(rows[0].data?.base))throw Error('Não foi possível carregar a carteira atual. Tente novamente.');
+      const row=rows[0],fresh=await PublicationData.hydrate(row.data),next=OfficeActivity.recordActivity(fresh,await transform(fresh),session.user);
+      const saved=await request(`/rest/v1/dashboards?id=eq.1&revision=eq.${row.revision}`,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({data:next,revision:row.revision+1})});
+      if(!Array.isArray(saved))throw Error('O servidor não confirmou a importação. Tente novamente.');
+      if(!saved.length)continue;
+      if(saved.length!==1)throw Error('Resposta inesperada ao salvar a importação.');
+      documentData=await PublicationData.hydrate(saved[0].data);revision=saved[0].revision;dashboardRequiresReload=false;$('sync').textContent='Salvo na nuvem';window.dispatchEvent(new Event('dashboard-saved'));return;
+    }
+    dashboardRequiresReload=true;throw Error('A carteira continua recebendo alterações da equipe. O arquivo foi mantido nesta janela; tente confirmar novamente.');
+  }catch(error){$('sync').textContent='Importação não confirmada — tente novamente';throw error;}
+});}
 async function persistDashboard(next){
   if(dashboardRequiresReload)throw Error('A carteira foi alterada em outra sessão. Recarregue a página antes de salvar para preservar as alterações da equipe.');
   next={...next,activityLog:[...new Map([...(documentData.activityLog||[]),...(next.activityLog||[])].map(e=>[e.id,e])).values()]};
