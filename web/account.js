@@ -36,7 +36,7 @@
     }catch(error){dialog.close();alert(error.message);}finally{toggleBusy(false);}
   };
   $('profile-name').oninput=preview;
-  $('remove-photo').onclick=()=>{if(photoBusy)return;photo='';$('profile-photo').value='';preview();message.textContent='Foto removida da prévia. Clique em Salvar meus dados para confirmar.';};
+  $('remove-photo').onclick=()=>{if(!busy&&!photoBusy)$('profile-photo').click();};
   $('profile-photo').onchange=async()=>{
     const file=$('profile-photo').files[0];if(!file)return;
     if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){message.textContent='Selecione PNG, JPG ou WebP de até 5 MB.';$('profile-photo').value='';return;}
@@ -59,8 +59,8 @@
   };
   $('profile-form').onsubmit=async event=>{
     event.preventDefault();if(busy||photoBusy)return;
-    const next={name:$('profile-name').value.trim(),oab:$('profile-oab').value.trim(),phone:$('profile-phone').value.trim(),photo};
-    if(!next.name){message.textContent='Preencha seu nome completo.';$('profile-name').focus();return;}
+    let next={name:$('profile-name').value.trim(),oab:$('profile-oab').value.trim(),phone:$('profile-phone').value.trim(),photo};
+    try{next=ProfileRegistration.validate(next);}catch(e){message.textContent=e.message;return;}
     toggleBusy(true);message.textContent='Salvando seus dados…';
     try{
       const user=await request('/auth/v1/user',{method:'PUT',body:JSON.stringify({data:{dibbern_profile:next}})});
