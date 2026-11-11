@@ -5,6 +5,7 @@
  ['TJSP e-SAJ','https://esaj.tjsp.jus.br/','Há dados públicos coletados no painel. A consulta oficial pode conter informações mais recentes.'],
  ['TJSP eproc','https://eproc1g.tjsp.jus.br/','A consulta pública exige número do processo e CAPTCHA. A conexão automática deste painel ainda não está configurada.'],
  ['TRF3 PJe','https://pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam','A consulta pública por OAB exige verificação humana. A conexão automática deste painel ainda não está configurada.'],
+ ['TRT2 PJe','https://pje.trt2.jus.br/consultaprocessual/','Consulta oficial. A coleta automática deste tribunal ainda não está configurada neste painel.'],
  ['TRT15 PJe','https://pje.trt15.jus.br/consultaprocessual/','A coleta deste painel recebeu bloqueio HTTP 403. O advogado pode tentar a consulta diretamente no portal.']
  ];
  $('integration-courts').innerHTML=portals.map(([name,url,status])=>`<section><strong>${esc(name)}</strong><p>${esc(status)}</p><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">Abrir portal oficial</a></section>`).join('');
