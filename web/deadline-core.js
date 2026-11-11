@@ -27,6 +27,17 @@
   for(const b of cases)if(!records.some(d=>d.caseId===b.id))records.push({id:'imported:'+date+':'+b.id,caseId:b.id,title:'Publicação importada — definir providência',date:'',sentAt:(b.importedPublications||[]).filter(p=>(day(p.importedAt)===date||day(p.lastImportedAt)===date)).at(-1)?.lastImportedAt||(b.importedPublications||[]).filter(p=>day(p.importedAt)===date).at(-1)?.importedAt||'',owner:'',status:'pending',kind:'publication',imported:true});
   return withResponsibles(data,records);
  }
+ function calculateDeadline(data,target,value,actor,at){
+  const math=typeof module!=='undefined'&&module.exports?require('./business-days'):root.BusinessDays;
+  const date=math.add(value.publicationDate,Number(value.businessDays),value.excludedDates,value.excludeRecess,value.calendar);
+  let record=(data.deadlines||[]).find(d=>d.id===target.id),materialized=false;
+  if(!record&&target.imported){const importDay=target.viewDate||target.importDay||day(target.sentAt),matches=forImportDay(data,importDay).filter(d=>d.caseId===target.caseId);if(matches.length!==1)throw Error('Este processo recebeu novos prazos. Confira o registro antes de salvar o cálculo.');const latest=matches[0];record=(data.deadlines||[]).find(d=>d.id===latest.id);if(!record){const {imported,resolvedOwners,resolvedClients,ownerAutomatic,...raw}=latest;record={...raw,owner:ownerAutomatic?'':raw.owner,createdAt:at,importDay};materialized=true;}}
+  if(!record&&target.legacy){const latest=all(data).find(d=>d.id===target.id&&d.caseId===target.caseId);if(latest){const {legacy,resolvedOwners,resolvedClients,ownerAutomatic,...raw}=latest;record={...raw,owner:ownerAutomatic?'':raw.owner,legacyCaseId:target.caseId,createdAt:at};materialized=true;}}
+  if(!record||record.caseId!==target.caseId||record.status!=='pending')throw Error('Este prazo foi concluído, cancelado ou alterado. Confira o registro antes de salvar.');
+  if(!materialized){const changed=['publicationDate','businessDays','calendar','excludedDates','excludeRecess','date','manualDate'].some(k=>JSON.stringify(record[k]??null)!==JSON.stringify(target[k]??null));if(changed)throw Error('Outra pessoa alterou o cálculo deste prazo. Seus campos foram mantidos; confira a versão atual em Abrir / editar.');}
+  const next={...record,publicationDate:value.publicationDate,businessDays:Number(value.businessDays),excludedDates:[...(value.excludedDates||[])],excludeRecess:!!value.excludeRecess,calendar:value.calendar,date,manualDate:false,validatedAt:null,validatedBy:null,validatedByName:null,calculatedAt:at,calculatedBy:actor.id,updatedAt:at};
+  return {...data,deadlines:materialized?[...(data.deadlines||[]),next]:data.deadlines.map(d=>d.id===record.id?next:d)};
+ }
  function validateReport(report){
   if(report&&(typeof report.text!=="string"||report.text.length>10000||!Array.isArray(report.images)||report.images.length>3||report.images.some(i=>typeof i.name!=="string"||i.name.length>200||typeof i.data!=="string"||i.data.length>200000||!/^data:image\/(jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(i.data))))throw Error("Confira as anotações e imagens da conclusão.");
  }
@@ -43,5 +54,5 @@
   const value={...record,...(report?{completionReport:report}:{}),status:'done',completedAt:at,completedBy:actor.id,completedByName:actor.user_metadata?.dibbern_profile?.name||actor.email||'Equipe',updatedAt:at};
   return {...data,deadlines:materialized?[...(data.deadlines||[]),value]:(data.deadlines||[]).map(d=>d.id===record.id?value:d)};
  }
- const api={state,day,all,assign,counts,forImportDay,withResponsibles,complete,addCompletionNote};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DeadlineFlow=api;
+ const api={state,day,all,assign,counts,forImportDay,withResponsibles,complete,addCompletionNote,calculateDeadline};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DeadlineFlow=api;
 })(typeof window==='undefined'?globalThis:window);
