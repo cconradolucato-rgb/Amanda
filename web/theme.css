@@ -97,7 +97,7 @@
 
 [data-theme=reading] .theme-sun{background:transparent;color:inherit;opacity:.5!important}
 [data-theme=reading] .theme-book{background:#f1d38c;color:#152d40;opacity:1}
-:root[data-theme=reading]{color-scheme:light;--bg:#f3e6c9;--ink:#44392b;--muted:#76634b;--line:#d6c29b;--surface:#fbf0d9;--blue:#775a2f;--gold:#a37935}
+:root[data-theme=reading]{color-scheme:light;--bg:#fbf0d9;--ink:#44392b;--muted:#76634b;--line:#d6c29b;--surface:#fff7e7;--blue:#775a2f;--gold:#a37935}
 [data-theme=reading] body{background:var(--bg);color:var(--ink)}
 [data-theme=reading] h1,[data-theme=reading] h2,[data-theme=reading] h3,[data-theme=reading] .cases-area h2,[data-theme=reading] .stat b{color:#654b28;text-shadow:none}
 [data-theme=reading] .panel,[data-theme=reading] .stat,[data-theme=reading] dialog,[data-theme=reading] .deadline-board-section{background:var(--surface);border-color:var(--line);color:var(--ink)}
@@ -124,3 +124,5 @@
 [data-theme=reading] #activity-calendar-grid button[data-has-publications=false]{background:#f4e8ca;color:#76634b;border-color:#d1bb91}
 [data-theme=reading] #activity-calendar-grid button[data-has-publications=true]{background:#ead09d;color:#5d421f}
 [data-theme=reading] #activity-calendar-grid button[aria-pressed=true]{background:#79603c;color:#fff5db;border-color:#a7854d}
+
+[data-theme=reading] #control-dialog #close-control,[data-theme=reading] #control-overview-stats button{background:#f3e5c6;color:#554025;border-color:#c8ad78}
