@@ -48,9 +48,9 @@ async function loadDashboard(){
     const response=await fetch('/api/office-updates',{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`},signal:AbortSignal.timeout(20000)});
     if(!response.ok)throw Error('Sincronização pendente');const result=await response.json();
     if(!Array.isArray(result.rows)||result.rows.length!==1)throw Error('Resposta inválida');rows=result.rows;
-  }catch{officeWarning=true;rows=await request('/rest/v1/dashboards?id=eq.1&select=data,revision');}
+  }catch(error){if(!OfficeAccess.role(session.user)?.admin)throw Error('O acesso individual ainda precisa ser ativado pelo administrador no banco de dados.');officeWarning=true;rows=await request('/rest/v1/dashboards?id=eq.1&select=data,revision');}
   if(!Array.isArray(rows)||rows.length!==1)throw Error('Conta sem acesso liberado ou banco ainda não configurado.');
-  documentData=await PublicationData.hydrate(rows[0].data);revision=rows[0].revision;
+  OfficeAccess.check(rows[0].data,session.user);documentData=await PublicationData.hydrate(rows[0].data);revision=rows[0].revision;
   if(!Array.isArray(documentData.base)||!Array.isArray(documentData.portfolios))throw Error('Dados do dashboard incompletos.');
   mountDashboard();$('login').hidden=true;$('publications-page').hidden=false;$('session-bar').hidden=false;
   $('session-email').textContent=session.user?.email||'Conta autorizada';if(window.renderAccountIdentity)window.renderAccountIdentity();$('sync').textContent=officeWarning?'Dados carregados. Atualização da carteira pendente; recarregue para tentar novamente.':'Dados carregados da nuvem';window.dispatchEvent(new Event('dashboard-ready'));

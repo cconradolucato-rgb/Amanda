@@ -3,7 +3,7 @@ const crypto=require('node:crypto'),store=require('../server/office-store'),outl
 module.exports=async(req,res)=>{
  res.setHeader('Cache-Control','no-store');if(req.method!=='POST')return res.status(405).json({error:'Método não permitido.'});
  try{
-  const {user,headers}=await store.access(req);await store.read(headers);const body=typeof req.body==='string'?JSON.parse(req.body):req.body||{};if(body.mode==='start'&&!body.personal&&user.email?.toLowerCase()!==outlook.sender)return res.status(403).json({error:'Entre com a conta da Amanda para conectar o Outlook remetente.'});
+  const {user,headers}=await store.access(req);require('../web/office-access').requireAdmin(user);await store.read(headers);const body=typeof req.body==='string'?JSON.parse(req.body):req.body||{};if(body.mode==='start'&&!body.personal&&user.email?.toLowerCase()!==outlook.sender)return res.status(403).json({error:'Entre com a conta da Amanda para conectar o Outlook remetente.'});
   if(!outlook.ready())return res.status(409).json({error:'O aplicativo Microsoft do escritório ainda precisa ser configurado pelo administrador. Não há autorização Outlook ativa.'});
   if(body.mode==='start'){
    if(req.headers.host&&req.headers.host.split(':')[0]!=='dibbernjuridico.vercel.app')return res.status(409).json({error:'Conecte o Outlook pelo endereço principal https://dibbernjuridico.vercel.app, entrando com sua conta.'});

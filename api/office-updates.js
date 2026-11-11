@@ -26,6 +26,8 @@ module.exports=async function handler(req,res){
     const userResponse=await fetch(supabaseURL+'/auth/v1/user',{headers,signal:AbortSignal.timeout(10000)});
     if(!userResponse.ok)return res.status(401).json({error:'Sessão inválida.'});
     const user=await userResponse.json();if(!user?.id)return res.status(401).json({error:'Sessão inválida.'});
+    const access=require('../web/office-access').role(user);if(!access)return res.status(403).json({error:'Conta não autorizada.'});
+    if(!access.admin){const registration=require('../server/sync-profile-oab').parseOAB(user.user_metadata?.dibbern_profile?.oab);const sync=await fetch(supabaseURL+'/rest/v1/rpc/office_sync_profile',{method:'POST',headers,body:JSON.stringify({p_oab:registration?.oab||null,p_uf:registration?.uf||null}),signal:AbortSignal.timeout(10000)});if(!sync.ok)return res.status(503).json({error:'O acesso individual ainda precisa ser ativado no banco de dados.'});const result=await fetch(supabaseURL+'/rest/v1/dashboards?id=eq.1&select=data,revision',{headers,signal:AbortSignal.timeout(10000)});if(!result.ok)return res.status(403).json({error:'Sem acesso à carteira.'});const rows=await result.json();if(!rows?.[0]?.data?.officeAccess||rows[0].data.officeAccess.scope!=='own')return res.status(503).json({error:'Ative as permissões individuais no banco.'});return res.json({rows,updated:false});}
     for(let attempt=0;attempt<3;attempt++){
       // Both reads and writes use the caller's token and existing database RLS.
       const response=await fetch(supabaseURL+'/rest/v1/dashboards?id=eq.1&select=data,revision',{headers,signal:AbortSignal.timeout(10000)});
