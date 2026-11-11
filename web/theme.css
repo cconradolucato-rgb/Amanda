@@ -126,3 +126,8 @@
 [data-theme=reading] #activity-calendar-grid button[aria-pressed=true]{background:#4d534a;color:#f8f9f3;border-color:#7c8472}
 
 [data-theme=reading] #control-dialog #close-control,[data-theme=reading] #control-overview-stats button{background:#e3e4de;color:#42473d;border-color:#bfc5b6}
+
+#theme-toggle .theme-symbols button{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#f5dda5;border:1px solid transparent;border-radius:50%;padding:2px;margin:0;width:36px;height:36px;box-shadow:none}
+#theme-toggle .theme-symbols button:hover{background:#ffffff18}
+#theme-toggle .theme-symbols button[aria-pressed=true]{border-color:#f1d38c;background:#ffffff10}
+#theme-toggle .theme-symbols button:focus-visible{outline:2px solid #f1d38c;outline-offset:2px}
