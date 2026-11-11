@@ -92,3 +92,5 @@
 [data-theme=dark] #control-dialog .deadline-table tbody tr.today:nth-child(even){background:#5a4c28}
 [data-theme=dark] #control-dialog .deadline-final-date,[data-theme=dark] #activity-calendar-dialog .deadline-final-date,[data-theme=dark] #control-dialog [data-calc-result],[data-theme=dark] #activity-calendar-grid .calendar-deadline-count{color:#ffadb5}
 [data-theme=dark] #control-dialog [data-calc-result]{background:#38252e;border-color:#bd7682}
+
+#control-dialog .deadline-table .calendar-target-deadline{outline:3px solid #c6a25b;outline-offset:-3px}
