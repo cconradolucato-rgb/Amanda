@@ -1,7 +1,7 @@
 'use strict';
 const store=require('../server/office-store'),outlook=require('../server/outlook-mail'),{validEmail}=require('../server/publication-mail');
 module.exports=async(req,res)=>{res.setHeader('Cache-Control','no-store');if(req.method!=='POST')return res.status(405).json({error:'Método não permitido.'});try{
- const {headers,user}=await store.access(req),body=typeof req.body==='string'?JSON.parse(req.body):req.body||{};let row=await store.read(headers);
+ const {headers,user}=await store.access(req),body=typeof req.body==='string'?JSON.parse(req.body):req.body||{};require('../web/office-access').requireAdmin(user);let row=await store.read(headers);
  const email=String(user.email||'').toLowerCase(),connectionFor=data=>{const c=data.outlookConnections?.[user.id]||(email===outlook.sender?data.outlookConnection:null);return c?.email===email&&c?.connectedBy===user.id?c:null;};
  if(body.mode==='status')return res.json({connected:outlook.ready()&&!!connectionFor(row.data)?.encryptedCredentials,sender:email,oauthReady:outlook.ready()});
  if(typeof body.requestId!=='string'||!/^[a-zA-Z0-9-]{20,80}$/.test(body.requestId))return res.status(400).json({error:'Identificador de envio inválido.'});

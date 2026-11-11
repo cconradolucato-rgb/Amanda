@@ -126,6 +126,7 @@
 [data-theme=reading] #activity-calendar-grid button[aria-pressed=true]{background:#4d534a;color:#f8f9f3;border-color:#7c8472}
 
 [data-theme=reading] #control-dialog #close-control,[data-theme=reading] #control-overview-stats button{background:#e3e4de;color:#42473d;border-color:#bfc5b6}
+[data-office-scope=own] #import-report,[data-office-scope=own] #control-import-aasp,[data-office-scope=own] #add-portfolio,[data-office-scope=own] #open-client-links,[data-office-scope=own] #open-audit,[data-office-scope=own] #open-integrations,[data-office-scope=own] #send-daily-publications,[data-office-scope=own] #save-daily-recipient,[data-office-scope=own] #connect-daily-outlook,[data-office-scope=own] #open-daily-outlook,[data-office-scope=own] #case-priority,[data-office-scope=own] [data-forward-case],[data-office-scope=own] [data-case-priority]{display:none!important}
 
 #theme-toggle .theme-symbols button{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#f5dda5;border:1px solid transparent;border-radius:50%;padding:2px;margin:0;width:36px;height:36px;box-shadow:none}
 #theme-toggle .theme-symbols button:hover{background:#ffffff18}

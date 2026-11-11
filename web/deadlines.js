@@ -81,7 +81,7 @@
   $('control-review-status').textContent=review?`Conferência registrada hoje por ${review.byName} às ${new Date(review.at).toLocaleTimeString('pt-BR',{timeZone:zone,hour:'2-digit',minute:'2-digit'})}.`:'Conferência diária pendente para esta visão.';
   $('control-list').innerHTML=deadlineTable(list,now);renderLawyer(all,now);
  }
- function lock(value){busy=value;editor.querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=value);control.querySelectorAll('button,textarea[data-completion-note],[data-deadline-calculator] input').forEach(el=>el.disabled=value);}
+ function lock(value){busy=value;editor.querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=value);control.querySelectorAll('button,textarea[data-completion-note],[data-deadline-calculator] input').forEach(el=>el.disabled=value);if(!value)window.applyOfficeAccessUI?.();}
  function name(){return session.user?.user_metadata?.dibbern_profile?.name||session.user?.email||'Equipe';}
  function deadlineInputs(){return Object.fromEntries(['case','description','date','time','owner','kind','status','reference','sent','assigned','client','publication','business-days','holidays','recess','calendar','manual-date'].map(id=>[id,$('deadline-'+id).type==='checkbox'?$('deadline-'+id).checked:$('deadline-'+id).value]));}
  function openDeadline(caseId,deadline){
