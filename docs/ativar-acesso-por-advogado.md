@@ -6,7 +6,7 @@ A versão do site deve conter `web/office-access.js` e as proteções dos endpoi
 2. Abra **SQL Editor → New query**.
 3. Copie **todo** o arquivo `migrations/20261111_office_access.sql` e execute em uma única operação com **Run**.
 4. O resultado esperado contém `Permissões por conta: versão 1` e o número de documentos preservados. Em caso de erro, a transação é revertida; envie apenas o texto do erro, sem senhas ou dados de clientes.
-5. Reabra o site nas contas de teste. `assistente2`, `carina` e `danilo` devem ver todas as carteiras. As contas `assistente1`, `assistente3`, `assistente9`, `assistente10` e `assistente6` devem ver somente a própria carteira, publicações, processos e vencimentos.
+5. Reabra primeiro o site no login da Amanda (`assistente2`) para sincronizar o índice privado dos tribunais. Em seguida, reabra nas contas de teste. `assistente2`, `carina` e `danilo` devem ver todas as carteiras. As contas `assistente1`, `assistente3`, `assistente9`, `assistente10` e `assistente6` devem ver somente a própria carteira, publicações, processos e vencimentos.
 
 O arquivo preserva os dados existentes, cria a cópia privada `office_private.dashboard_backup_20261111` e mantém o documento original em `office_private.dashboards`. O endereço público `dashboards` passa a ser uma visão filtrada pelo e-mail autenticado; alterações normais são aplicadas somente aos registros autorizados, com controle de revisão. Não há exclusão de processos nesta migração.
 

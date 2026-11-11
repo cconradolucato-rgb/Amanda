@@ -35,6 +35,7 @@ module.exports=async function handler(req,res){
       const rows=await response.json();if(!Array.isArray(rows)||rows.length!==1)return res.status(403).json({error:'Sem permissão para acessar a carteira.'});
       const current=rows[0];
       if(!Number.isSafeInteger(current.revision)||!Array.isArray(current.data?.portfolios)||!Array.isArray(current.data?.base))return res.status(502).json({error:'Carteira inválida.'});
+      if(current.data.officeAccess?.version===1&&current.data.courtPublicationsPacked&&current.data.courtPublicationsVersion&&current.data.officeCourtCacheVersion!==current.data.courtPublicationsVersion){const entries=require('../web/publication-core').courtPublications(current.data);const cache=await fetch(supabaseURL+'/rest/v1/rpc/office_fill_court_cache',{method:'POST',headers,body:JSON.stringify({p_version:current.data.courtPublicationsVersion,p_entries:entries}),signal:AbortSignal.timeout(20000)});if(!cache.ok)throw Error('Sincronização da fonte pendente.');continue;}
       const updates=Array.isArray(current.data.officeUpdates)?current.data.officeUpdates:[];
       const courtUpdate=applyCourtUpdate(current.data);
       const repaired=repairInternalAssignments(courtUpdate.data);

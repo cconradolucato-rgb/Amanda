@@ -18,6 +18,9 @@ REVOKE ALL ON office_private.dashboard_backup_20261111 FROM PUBLIC, anon, authen
 GRANT USAGE ON SCHEMA office_private TO service_role;
 GRANT SELECT, UPDATE ON office_private.dashboards TO service_role;
 
+CREATE TABLE IF NOT EXISTS office_private.court_cache(id integer PRIMARY KEY CHECK(id=1),version text NOT NULL,data jsonb NOT NULL);
+REVOKE ALL ON office_private.court_cache FROM PUBLIC,anon,authenticated;
+
 CREATE OR REPLACE FUNCTION public.office_admin() RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog AS $$
  SELECT coalesce(auth.jwt()->>'role','')='service_role' OR (auth.uid() IS NOT NULL AND lower(coalesce(auth.jwt()->>'email','')) IN ('assistente2@dibbernadvogados.com.br','carina@dibbernadvogados.com.br','danilo@dibbernadvogados.com.br'))
@@ -72,7 +75,7 @@ CREATE OR REPLACE FUNCTION public.office_project_dashboard(doc jsonb) RETURNS js
 LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog AS $$
 DECLARE own text:=public.office_lawyer(); ids text[]; result jsonb; portfolio jsonb; rows jsonb; actor text:=auth.uid()::text;
 BEGIN
- IF public.office_admin() THEN RETURN doc||jsonb_build_object('officeAccess',jsonb_build_object('version',1,'scope','all')); END IF;
+ IF public.office_admin() THEN RETURN doc||jsonb_build_object('officeAccess',jsonb_build_object('version',1,'scope','all'),'officeCourtCacheVersion',(SELECT version FROM office_private.court_cache WHERE id=1)); END IF;
  IF own IS NULL THEN RETURN NULL; END IF;
  ids:=public.office_case_ids(doc);
  SELECT value INTO portfolio FROM jsonb_array_elements(coalesce(doc->'portfolios','[]')) WHERE public.office_owner(value->>'lawyer')=own LIMIT 1;
@@ -83,7 +86,7 @@ BEGIN
  SELECT coalesce(jsonb_agg(value),'[]') INTO rows FROM jsonb_array_elements(coalesce(doc->'base','[]')) WHERE value->>'id'=ANY(ids);result:=result||jsonb_build_object('base',rows);
  SELECT coalesce(jsonb_object_agg(key,value),'{}') INTO rows FROM jsonb_each(coalesce(doc->'annotations','{}')) WHERE key=ANY(ids);result:=result||jsonb_build_object('annotations',rows);
  SELECT coalesce(jsonb_agg(value),'[]') INTO rows FROM jsonb_array_elements(coalesce(doc->'deadlines','[]')) WHERE value->>'caseId'=ANY(ids) AND (coalesce(value->>'owner','')='' OR public.office_has_owner(value->'owner',own));result:=result||jsonb_build_object('deadlines',rows);
- SELECT coalesce(jsonb_agg(value),'[]') INTO rows FROM jsonb_array_elements(coalesce(doc->'courtPublications','[]')) WHERE value->>'caseId'=ANY(ids);result:=result||jsonb_build_object('courtPublications',rows);
+ SELECT coalesce(jsonb_agg(value),'[]') INTO rows FROM jsonb_array_elements(coalesce(doc->'courtPublications',(SELECT data FROM office_private.court_cache WHERE id=1),'[]')) WHERE value->>'caseId'=ANY(ids);result:=result||jsonb_build_object('courtPublications',rows);
  SELECT coalesce(jsonb_agg(value),'[]') INTO rows FROM jsonb_array_elements(coalesce(doc->'clientAliases','[]')) alias_row WHERE EXISTS(SELECT 1 FROM jsonb_array_elements_text(coalesce(portfolio->'clients','[]')) c WHERE public.office_normalize(c)=public.office_normalize(alias_row.value->>'client'));result:=result||jsonb_build_object('clientAliases',rows);
  -- Não devolve configurações globais, tokens, snapshots compactados ou logs com before/after de outras carteiras.
  SELECT coalesce(jsonb_agg(jsonb_build_object('id',e->'id','at',e->'at','kind',e->'kind','title',e->'title','actorId',e->'actorId','actorName',e->'actorName','caseIds',(SELECT coalesce(jsonb_agg(v),'[]') FROM jsonb_array_elements_text(coalesce(e->'caseIds','[]')) v WHERE v=ANY(ids)))),'[]') INTO rows FROM jsonb_array_elements(coalesce(doc->'activityLog','[]')) e WHERE EXISTS(SELECT 1 FROM jsonb_array_elements_text(coalesce(e->'caseIds','[]')) v WHERE v=ANY(ids));result:=result||jsonb_build_object('activityLog',rows);
@@ -112,7 +115,7 @@ BEGIN
  IF NOT FOUND OR current_revision<>OLD.revision THEN RETURN NULL; END IF;
  IF jsonb_typeof(NEW.data)<>'object' THEN RAISE EXCEPTION 'Documento inválido.' USING ERRCODE='42501'; END IF;
  IF public.office_admin() THEN
-  patched:=NEW.data-'officeAccess';
+  patched:=NEW.data-ARRAY['officeAccess','officeCourtCacheVersion'];
  ELSE
   IF own IS NULL THEN RAISE EXCEPTION 'Conta não autorizada.' USING ERRCODE='42501'; END IF;
   visible:=public.office_project_dashboard(current_doc);ids:=public.office_case_ids(current_doc);patched:=current_doc;
@@ -187,6 +190,18 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.office_sync_profile(text,text) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.office_sync_profile(text,text) TO authenticated;
+CREATE OR REPLACE FUNCTION public.office_fill_court_cache(p_version text,p_entries jsonb) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
+BEGIN
+ IF NOT public.office_admin() THEN RAISE EXCEPTION 'Somente a administração pode sincronizar a fonte dos tribunais.' USING ERRCODE='42501'; END IF;
+ IF p_version IS NULL OR length(p_version)>300 OR jsonb_typeof(p_entries)<>'array' OR jsonb_array_length(p_entries)>100000 THEN RAISE EXCEPTION 'Fonte inválida.'; END IF;
+ IF EXISTS(SELECT 1 FROM office_private.court_cache WHERE id=1 AND version=p_version) THEN RETURN false; END IF;
+ INSERT INTO office_private.court_cache(id,version,data) VALUES(1,p_version,p_entries) ON CONFLICT(id) DO UPDATE SET version=excluded.version,data=excluded.data;
+ UPDATE office_private.dashboards SET revision=revision+1 WHERE id=1;
+ RETURN true;
+END $$;
+REVOKE ALL ON FUNCTION public.office_fill_court_cache(text,jsonb) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.office_fill_court_cache(text,jsonb) TO authenticated,service_role;
 CREATE OR REPLACE FUNCTION public.office_access_version() RETURNS integer
 LANGUAGE sql IMMUTABLE SET search_path=pg_catalog AS $$ SELECT 1 $$;
 REVOKE ALL ON FUNCTION public.office_access_version() FROM PUBLIC;
