@@ -19,6 +19,7 @@
   history.push({id:at+'-'+history.length,at,from:prior||null,to:owner||null,by:actor.id,byName:actor.user_metadata?.dibbern_profile?.name||actor.email||'Equipe'});
   return {...value,owner,assignedAt:owner?at:null,assignedBy:owner?actor.id:null,assignedByName:owner?(actor.user_metadata?.dibbern_profile?.name||actor.email||'Equipe'):null,assignmentHistory:history};
  }
+ function compareDue(a,b){return (a.date||'9999-12-31').localeCompare(b.date||'9999-12-31')||(a.time||'23:59:59').localeCompare(b.time||'23:59:59')||String(a.caseId||'').localeCompare(String(b.caseId||''))||String(a.id||'').localeCompare(String(b.id||''));}
  function counts(list){const count={all:list.length,waiting:0,distributed:0,done:0,cancelled:0};for(const d of list)count[state(d)]++;return count;}
  function forImportDay(data,date){
   const imported=typeof module!=='undefined'&&module.exports?require('./imported-day-core'):root.ImportedDay;
@@ -54,5 +55,5 @@
   const value={...record,...(report?{completionReport:report}:{}),status:'done',completedAt:at,completedBy:actor.id,completedByName:actor.user_metadata?.dibbern_profile?.name||actor.email||'Equipe',updatedAt:at};
   return {...data,deadlines:materialized?[...(data.deadlines||[]),value]:(data.deadlines||[]).map(d=>d.id===record.id?value:d)};
  }
- const api={state,day,all,assign,counts,forImportDay,withResponsibles,complete,addCompletionNote,calculateDeadline};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DeadlineFlow=api;
+ const api={state,day,all,assign,counts,forImportDay,withResponsibles,complete,addCompletionNote,calculateDeadline,compareDue};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DeadlineFlow=api;
 })(typeof window==='undefined'?globalThis:window);

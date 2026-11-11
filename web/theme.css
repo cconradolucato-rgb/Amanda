@@ -68,3 +68,27 @@
 .deadline-calculator-fields>label{display:grid;grid-template-rows:3.2em 44px;gap:6px;margin:0;min-width:0}
 .deadline-calculator-fields>label>span{display:flex;align-items:flex-end;line-height:1.4}
 .deadline-calculator-fields>label>input{display:block;width:100%;min-width:0;height:44px;margin:0;box-sizing:border-box}
+
+.control-quick-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#control-open-calendar{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;padding:8px;flex-shrink:0}
+#control-dialog .deadline-table tbody tr:nth-child(odd){background:#fff}
+#control-dialog .deadline-table tbody tr:nth-child(even){background:#e0ebf6}
+#control-dialog .deadline-table tbody td{border-top:3px solid #bdcfe0}
+#control-dialog .deadline-table tbody tr.overdue:nth-child(odd){background:#fff0f0}
+#control-dialog .deadline-table tbody tr.overdue:nth-child(even){background:#fbdcde}
+#control-dialog .deadline-table tbody tr.today:nth-child(odd){background:#fff9e5}
+#control-dialog .deadline-table tbody tr.today:nth-child(even){background:#ffedb5}
+#control-dialog .deadline-final-date,#activity-calendar-dialog .deadline-final-date,#control-dialog [data-calc-result]{color:#b91c1c;font-weight:800}
+#control-dialog [data-calc-result]{border-color:#d89797;background:#fff5f5}
+#activity-calendar-grid button[data-has-deadlines=true]{border:2px solid #c34c4c}
+#activity-calendar-grid .calendar-deadline-count{display:block;color:#b91c1c;font-weight:800;font-size:11px}
+#activity-calendar-grid button[aria-pressed=true] .calendar-deadline-count{color:#ffe0e0}
+[data-theme=dark] #control-dialog .deadline-table tbody tr:nth-child(odd){background:#1b2d3c}
+[data-theme=dark] #control-dialog .deadline-table tbody tr:nth-child(even){background:#304e66}
+[data-theme=dark] #control-dialog .deadline-table tbody td{border-color:#657e93}
+[data-theme=dark] #control-dialog .deadline-table tbody tr.overdue:nth-child(odd){background:#451f27}
+[data-theme=dark] #control-dialog .deadline-table tbody tr.overdue:nth-child(even){background:#64303b}
+[data-theme=dark] #control-dialog .deadline-table tbody tr.today:nth-child(odd){background:#403723}
+[data-theme=dark] #control-dialog .deadline-table tbody tr.today:nth-child(even){background:#5a4c28}
+[data-theme=dark] #control-dialog .deadline-final-date,[data-theme=dark] #activity-calendar-dialog .deadline-final-date,[data-theme=dark] #control-dialog [data-calc-result],[data-theme=dark] #activity-calendar-grid .calendar-deadline-count{color:#ffadb5}
+[data-theme=dark] #control-dialog [data-calc-result]{background:#38252e;border-color:#bd7682}
