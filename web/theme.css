@@ -94,3 +94,33 @@
 [data-theme=dark] #control-dialog [data-calc-result]{background:#38252e;border-color:#bd7682}
 
 #control-dialog .deadline-table .calendar-target-deadline{outline:3px solid #c6a25b;outline-offset:-3px}
+
+[data-theme=reading] .theme-sun{background:transparent;color:inherit;opacity:.5!important}
+[data-theme=reading] .theme-book{background:#f1d38c;color:#152d40;opacity:1}
+:root[data-theme=reading]{color-scheme:light;--bg:#f3e6c9;--ink:#44392b;--muted:#76634b;--line:#d6c29b;--surface:#fbf0d9;--blue:#775a2f;--gold:#a37935}
+[data-theme=reading] body{background:var(--bg);color:var(--ink)}
+[data-theme=reading] h1,[data-theme=reading] h2,[data-theme=reading] h3,[data-theme=reading] .cases-area h2,[data-theme=reading] .stat b{color:#654b28;text-shadow:none}
+[data-theme=reading] .panel,[data-theme=reading] .stat,[data-theme=reading] dialog,[data-theme=reading] .deadline-board-section{background:var(--surface);border-color:var(--line);color:var(--ink)}
+[data-theme=reading] .case-controls,[data-theme=reading] .cases-area tr,[data-theme=reading] .portfolio-lawyer,[data-theme=reading] .portfolio-client,[data-theme=reading] .deadline-item,[data-theme=reading] .activity-entry,[data-theme=reading] .saved-note,[data-theme=reading] .history-data{background:#f9edcf;border-color:var(--line);color:var(--ink)}
+[data-theme=reading] .case-controls::before{background:var(--bg)}
+[data-theme=reading] input,[data-theme=reading] select,[data-theme=reading] textarea,[data-theme=reading] select option{background:#fff8e9;color:#44392b;border-color:#bfaa80;box-shadow:none}
+[data-theme=reading] input::placeholder,[data-theme=reading] textarea::placeholder{color:#887454;opacity:1}
+[data-theme=reading] dialog label,[data-theme=reading] .portfolio-lawyer summary,[data-theme=reading] .court-coverage>summary{color:#59452b}
+[data-theme=reading] .muted,[data-theme=reading] td small,[data-theme=reading] .note-meta,[data-theme=reading] .foot,[data-theme=reading] .release-info,[data-theme=reading] #sync,[data-theme=reading] .history-fields dt{color:var(--muted)}
+[data-theme=reading] button:not(#theme-toggle){background:#f3e5c6;color:#554025;border-color:#c8ad78}
+[data-theme=reading] .primary,[data-theme=reading] button[aria-selected=true],[data-theme=reading] button[aria-pressed=true]{background:#79603c;color:#fff5db;border-color:#a7854d}
+[data-theme=reading] th{background:#e7d5ae;color:#5d482c;border-color:#cbb68e}
+[data-theme=reading] td{border-color:#d6c29b}
+[data-theme=reading] .source,[data-theme=reading] .history-section,[data-theme=reading] .control-stats span{background:#f0e1bf;color:#59482f;border-color:var(--line)}
+[data-theme=reading] #control-dialog .deadline-table tbody tr:nth-child(odd){background:#fff4de}
+[data-theme=reading] #control-dialog .deadline-table tbody tr:nth-child(even){background:#ead6aa}
+[data-theme=reading] #control-dialog .deadline-table tbody td{border-color:#c7ae7e}
+[data-theme=reading] #control-dialog .deadline-table tbody tr.overdue:nth-child(odd){background:#fce8dc}
+[data-theme=reading] #control-dialog .deadline-table tbody tr.overdue:nth-child(even){background:#f2ccc1}
+[data-theme=reading] #control-dialog .deadline-table tbody tr.today:nth-child(odd){background:#fff0c4}
+[data-theme=reading] #control-dialog .deadline-table tbody tr.today:nth-child(even){background:#edda9e}
+[data-theme=reading] #control-dialog [data-calc-result]{background:#fff0df;color:#ad241e;border-color:#cf9680}
+[data-theme=reading] #control-dialog .deadline-final-date,[data-theme=reading] #activity-calendar-dialog .deadline-final-date{color:#ad241e}
+[data-theme=reading] #activity-calendar-grid button[data-has-publications=false]{background:#f4e8ca;color:#76634b;border-color:#d1bb91}
+[data-theme=reading] #activity-calendar-grid button[data-has-publications=true]{background:#ead09d;color:#5d421f}
+[data-theme=reading] #activity-calendar-grid button[aria-pressed=true]{background:#79603c;color:#fff5db;border-color:#a7854d}
