@@ -63,3 +63,8 @@
 [data-theme=dark] .tribunal-button:hover{background:#3c4d55;color:#ffe6b4}
 [data-theme=dark] #control-badge:not(:empty){background:#4a3b23;color:#ffe0a1}
 [data-theme=dark] #open-control.has-overdue #control-badge{background:#a72e40;color:#fff}
+
+.deadline-calculator-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;margin-top:8px;align-items:end}
+.deadline-calculator-fields>label{display:grid;grid-template-rows:3.2em 44px;gap:6px;margin:0;min-width:0}
+.deadline-calculator-fields>label>span{display:flex;align-items:flex-end;line-height:1.4}
+.deadline-calculator-fields>label>input{display:block;width:100%;min-width:0;height:44px;margin:0;box-sizing:border-box}
