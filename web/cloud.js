@@ -3,6 +3,7 @@ const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const config=window.DIBBERN_CONFIG;
 let session=null,documentData=null,revision=0;
+function canUndoForward(){return ['assistente2@dibbernadvogados.com.br','carina@dibbernadvogados.com.br','danilo@dibbernadvogados.com.br'].includes(session?.user?.email?.trim().toLowerCase());}
 function storeSession(value){session=value;if(value)sessionStorage.setItem('dibbern-session',JSON.stringify(value));else sessionStorage.removeItem('dibbern-session');}
 async function request(path,options={},authenticated=true){
   if(authenticated){
