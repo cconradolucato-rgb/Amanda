@@ -27,13 +27,14 @@
   for(const b of cases)if(!records.some(d=>d.caseId===b.id))records.push({id:'imported:'+date+':'+b.id,caseId:b.id,title:'Publicação importada — definir providência',date:'',sentAt:(b.importedPublications||[]).filter(p=>(day(p.importedAt)===date||day(p.lastImportedAt)===date)).at(-1)?.lastImportedAt||(b.importedPublications||[]).filter(p=>day(p.importedAt)===date).at(-1)?.importedAt||'',owner:'',status:'pending',kind:'publication',imported:true});
   return withResponsibles(data,records);
  }
- function complete(data,target,actor,at){
+ function complete(data,target,actor,at,report){
+  if(report&&(typeof report.text!=="string"||report.text.length>10000||!Array.isArray(report.images)||report.images.length>3||report.images.some(i=>typeof i.name!=="string"||i.name.length>200||typeof i.data!=="string"||i.data.length>200000||!/^data:image\/(jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(i.data))))throw Error("Confira as anotações e imagens da conclusão.");
   let record=(data.deadlines||[]).find(d=>d.id===target.id),materialized=false;
   if(!record&&target.imported){const date=target.viewDate||target.importDay||day(target.sentAt),matches=forImportDay(data,date).filter(d=>d.caseId===target.caseId);if(matches.length!==1)throw Error('Este processo foi atualizado e possui mais de um prazo ou saiu deste lote. Atualize a lista e selecione o prazo novamente.');const latest=matches[0];record=(data.deadlines||[]).find(d=>d.id===latest.id);if(!record){const {imported,resolvedOwners,resolvedClients,ownerAutomatic,...raw}=latest;record={...raw,owner:ownerAutomatic?'':raw.owner,createdAt:at,importDay:date};materialized=true;}}
   if(!record||record.caseId!==target.caseId)throw Error('O prazo foi alterado ou removido por outra pessoa. Atualize a lista antes de concluir.');
-  if(record.status==='done')return data;
+  if(record.status==='done'){if(report&&JSON.stringify(record.completionReport)!==JSON.stringify(report))throw Error('Este prazo já foi concluído por outra pessoa. Suas anotações foram mantidas nesta janela; confira a conclusão antes de continuar.');return data;}
   if(record.status!=='pending')throw Error('Este prazo está cancelado ou não está mais pendente. Confira o registro antes de concluir.');
-  const value={...record,status:'done',completedAt:at,completedBy:actor.id,completedByName:actor.user_metadata?.dibbern_profile?.name||actor.email||'Equipe',updatedAt:at};
+  const value={...record,...(report?{completionReport:report}:{}),status:'done',completedAt:at,completedBy:actor.id,completedByName:actor.user_metadata?.dibbern_profile?.name||actor.email||'Equipe',updatedAt:at};
   return {...data,deadlines:materialized?[...(data.deadlines||[]),value]:(data.deadlines||[]).map(d=>d.id===record.id?value:d)};
  }
  const api={state,day,all,assign,counts,forImportDay,withResponsibles,complete};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DeadlineFlow=api;
