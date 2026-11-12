@@ -2,7 +2,7 @@
   "name": "dibbern-access-tests",
   "private": true,
   "scripts": {
-    "test": "node access-postgres.cjs && node server-access.cjs"
+    "test": "node access-postgres.cjs && node server-access.cjs && node account-approval.cjs && node staff-accounts-api.cjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.16"

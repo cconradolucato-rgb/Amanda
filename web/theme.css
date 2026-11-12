@@ -132,3 +132,5 @@
 #theme-toggle .theme-symbols button:hover{background:#ffffff18}
 #theme-toggle .theme-symbols button[aria-pressed=true]{border-color:#f1d38c;background:#ffffff10}
 #theme-toggle .theme-symbols button:focus-visible{outline:2px solid #f1d38c;outline-offset:2px}
+
+#open-staff-accounts{font-size:12px}#staff-accounts-dialog{width:min(760px,96vw)}#staff-accounts-dialog .client-link-item{padding:16px;margin:14px 0;border:1px solid var(--line);border-radius:8px}#staff-accounts-dialog h3{margin:8px 0;font-size:18px}[data-office-scope=own] #open-staff-accounts{display:none!important}

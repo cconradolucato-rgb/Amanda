@@ -51,6 +51,9 @@
     },
     "api/analyze-publication.js": {
       "maxDuration": 60
+    },
+    "api/staff-accounts.js": {
+      "maxDuration": 60
     }
   },
   "crons": [
