@@ -1,6 +1,6 @@
 'use strict';
 (function(root){
- const admins=['assistente2@dibbernadvogados.com.br','carina@dibbernadvogados.com.br','danilo@dibbernadvogados.com.br'];
+ const admins=['cconradolucato@gmail.com','assistente2@dibbernadvogados.com.br','carina@dibbernadvogados.com.br','danilo@dibbernadvogados.com.br'];
  const lawyers={'assistente1@dibbernadvogados.com.br':'paola alves','assistente3@dibbernadvogados.com.br':'lais cavinato','assistente9@dibbernadvogados.com.br':'thais dias','assistente10@dibbernadvogados.com.br':'gabriela pizani','assistente6@dibbernadvogados.com.br':'guilherme aguiar'};
  function role(user){const email=String(user?.email||'').trim().toLowerCase();return admins.includes(email)?{admin:true,email}:lawyers[email]?{admin:false,email,lawyer:lawyers[email]}:null;}
  function requireAdmin(user){if(!role(user)?.admin)throw Object.assign(Error('Esta ação é exclusiva da administração do escritório.'),{status:403});}
