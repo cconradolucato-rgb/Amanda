@@ -1,6 +1,6 @@
 'use strict';
 let sharedPendingRow=null,sharedChecking=false,sharedViewTimer=null;
-function sharedEditorOpen(){return [...document.querySelectorAll('dialog[open]')].some(d=>!['audit-dialog','integrations-dialog','today-deadlines-dialog'].includes(d.id));}
+function sharedEditorOpen(){return [...document.querySelectorAll('dialog[open]')].some(d=>!['audit-dialog','integrations-dialog','today-deadlines-dialog','activity-calendar-dialog'].includes(d.id));}
 function sharedNotice(text){const node=$('shared-sync-message');node.hidden=!text;if(node.textContent!==text)node.textContent=text;}
 async function acceptSharedRow(row){
  if(!row||row.revision<=revision)return;

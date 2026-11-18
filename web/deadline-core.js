@@ -12,7 +12,21 @@
    return {...d,owner:owners.join(' / '),resolvedOwners:owners,ownerAutomatic:!explicit&&owners.length>0,resolvedClients:[...new Set([...(a.clientNames||[]),...(a.portfolioClients||[]),...(a.client?[a.client]:[])])]};
   });
  }
- function all(data){const list=[...(data.deadlines||[])];for(const [caseId,note] of Object.entries(data.annotations||{}))if(note.due&&!list.some(d=>d.legacyCaseId===caseId))list.push({id:'legacy:'+caseId,caseId,title:'Prazo interno já registrado',date:note.due,time:'',owner:note.owners?.length===1?note.owners[0]:note.owners?.length>1?'':note.owner||'',status:note.status==='Providências concluídas'?'done':'pending',kind:'internal',legacy:true});return withResponsibles(data,list);}
+ function hasDueDate(d){if(!/^\d{4}-\d{2}-\d{2}$/.test(d.date||''))return false;const value=new Date(d.date+'T12:00:00Z');return Number.isFinite(value.getTime())&&value.toISOString().slice(0,10)===d.date;}
+ function isDeadline(d){return hasDueDate(d)&&d.kind!=='followup';}
+ function attention(data,today){return all(data).filter(d=>d.status==='pending'&&(!isDeadline(d)||d.date<=today)).sort((a,b)=>{const rank=d=>d.date&&d.date<=today?0:!d.date?1:2;return rank(a)-rank(b)||compareDue(a,b)||String(a.sentAt||a.createdAt||'').localeCompare(String(b.sentAt||b.createdAt||''));});}
+ function importedTriage(data,stored){
+  const out=[],receipts=new Map();
+  for(const item of [...(data.imports||[]),...(data.activityLog||[]).filter(e=>e.kind==='import'&&e.importKey).map(e=>({...e,importedAt:e.at}))])for(const id of item.caseIds||[]){if(day(item.importedAt)&&(!receipts.has(id)||item.importedAt<receipts.get(id)))receipts.set(id,item.importedAt);}
+  for(const b of data.base||[]){const list=b.importedPublications||[],active=list.filter(p=>!p.superseded&&!p.referenceOnly),groups=new Map();if(list.length&&!active.length)continue;
+   for(const p of active){const at=p.importedAt||receipts.get(b.id),date=day(at);if(!date)continue;if(!groups.has(date)||at<groups.get(date))groups.set(date,at);}
+   if(!groups.size&&receipts.has(b.id))groups.set(day(receipts.get(b.id)),receipts.get(b.id));
+   for(const [date,at] of groups){if(stored.some(d=>!d.legacy&&d.caseId===b.id&&(d.importDay||day(d.sentAt||d.createdAt))===date))continue;out.push({id:'imported:'+date+':'+b.id,caseId:b.id,title:'Publicação importada — definir providência',date:'',sentAt:at,createdAt:at,importDay:date,owner:'',status:'pending',kind:'publication',imported:true});}
+  }
+  return out;
+ }
+ function all(data){const list=[...(data.deadlines||[])];for(const [caseId,note] of Object.entries(data.annotations||{}))if(note.due&&!list.some(d=>d.legacyCaseId===caseId))list.push({id:'legacy:'+caseId,caseId,title:'Prazo interno já registrado',date:note.due,time:'',owner:note.owners?.length===1?note.owners[0]:note.owners?.length>1?'':note.owner||'',status:note.status==='Providências concluídas'?'done':'pending',kind:'internal',legacy:true});return withResponsibles(data,[...list,...importedTriage(data,list)]);}
+
  function assign(previous,value,actor,at){
   const owner=String(value.owner||'').trim(),prior=String(previous?.owner||'').trim(),history=[...(previous?.assignmentHistory||[])];
   if(owner===prior)return {...value,owner,assignedAt:previous?.assignedAt||null,assignedBy:previous?.assignedBy||null,assignedByName:previous?.assignedByName||null,assignmentHistory:history};
@@ -55,5 +69,5 @@
   const value={...record,...(report?{completionReport:report}:{}),status:'done',completedAt:at,completedBy:actor.id,completedByName:actor.user_metadata?.dibbern_profile?.name||actor.email||'Equipe',updatedAt:at};
   return {...data,deadlines:materialized?[...(data.deadlines||[]),value]:(data.deadlines||[]).map(d=>d.id===record.id?value:d)};
  }
- const api={state,day,all,assign,counts,forImportDay,withResponsibles,complete,addCompletionNote,calculateDeadline,compareDue};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DeadlineFlow=api;
+ const api={state,day,all,assign,counts,forImportDay,withResponsibles,complete,addCompletionNote,calculateDeadline,compareDue,hasDueDate,isDeadline,attention};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DeadlineFlow=api;
 })(typeof window==='undefined'?globalThis:window);
