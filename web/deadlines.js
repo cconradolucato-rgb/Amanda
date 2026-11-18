@@ -40,7 +40,7 @@
   $('routine-attention-more').textContent=list.length>30?'Mostrando 30 de '+list.length+'. Consulte a aba Triagem e conferências e os prazos em aberto para ver os demais.':'';
  }
  $('routine-attention-list').onclick=e=>{const b=e.target.closest('[data-attention-deadline]');if(b)window.openCalendarDeadline(b.dataset.attentionDeadline);};
- $('routine-new-followup').onclick=()=>{openDeadline();$('deadline-kind').value='followup';$('deadline-description').placeholder='Ex.: cobrar documento e confirmar próximos passos';};
+ $('routine-new-followup').onclick=()=>{openDeadline();if(!OfficeAccess.role(session.user)?.admin){const own=(documentData.portfolios||[]).find(p=>p.email?.toLowerCase()===session.user.email?.toLowerCase()||p.profileUserId===session.user.id)||(documentData.officeAccess?.scope==='own'?documentData.portfolios?.[0]:null);if(own)$('deadline-owner').value=own.lawyer;}$('deadline-kind').value='followup';$('deadline-description').placeholder='Ex.: cobrar documento e confirmar próximos passos';};
  function showAlerts(){refreshPortfolioDeadlines();
   const active=!!session&&!!documentData;$('open-control').hidden=!active;if(!active)return;
   const now=nowBR(),records=allDeadlines().filter(d=>d.status==='pending'),pending=records.filter(DeadlineFlow.isDeadline),triage=records.filter(d=>!DeadlineFlow.isDeadline(d)),late=pending.filter(d=>overdue(d,now)).length,today=pending.filter(d=>d.date===now.date&&!overdue(d,now)).length,missing=records.filter(d=>!d.owner).length,returns=triage.filter(d=>d.kind==='followup'&&d.date&&d.date<=now.date).length;
