@@ -5,14 +5,17 @@ const config=window.DIBBERN_CONFIG;
 let session=null,documentData=null,revision=0;
 function canUndoForward(){return session?.user?.email?.trim().toLowerCase()==='assistente2@dibbernadvogados.com.br';}
 function storeSession(value){session=value;if(value)sessionStorage.setItem('dibbern-session',JSON.stringify(value));else sessionStorage.removeItem('dibbern-session');}
+let sessionRefresh=null;
+async function ensureSession(force=false){
+ if(!session)throw Error('Entre novamente para continuar.');
+ if(sessionRefresh)return sessionRefresh;
+ if(!force&&(session.expires_at||0)>=Date.now()/1000+60)return;
+ if(!session.refresh_token)throw Error('Sua sessão expirou. Entre novamente para continuar.');
+ sessionRefresh=(async()=>{const fresh=await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:session.refresh_token})},false);if(!fresh?.access_token||!fresh?.user)throw Error('Não foi possível renovar a sessão. Entre novamente.');storeSession({...fresh,expires_at:Math.floor(Date.now()/1000)+fresh.expires_in});})();
+ try{await sessionRefresh;}finally{sessionRefresh=null;}
+}
 async function request(path,options={},authenticated=true){
-  if(authenticated){
-    if(!session)throw Error('Entre novamente para continuar.');
-    if((session.expires_at||0)<Date.now()/1000+60){
-      const fresh=await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:session.refresh_token})},false);
-      storeSession({...fresh,expires_at:Math.floor(Date.now()/1000)+fresh.expires_in});
-    }
-  }
+  if(authenticated)await ensureSession();
   const response=await fetch(config.url+path,{...options,headers:{apikey:config.key,'Content-Type':'application/json',...(authenticated?{Authorization:`Bearer ${session.access_token}`} : {}),...options.headers},signal:AbortSignal.timeout(20000)});
   let body;try{body=await response.json()}catch{body=null}
   if(!response.ok){
@@ -43,9 +46,10 @@ function updateDashboard(transform,{operation='importação'}={}){return queueDa
   }catch(error){$('sync').textContent=(operation==='importação'?'Importação':operation==='conclusão do prazo'?'Conclusão':'Alteração')+' não confirmada — tente novamente';throw error;}
 });}
 async function loadDashboard(){
+  await ensureSession();
   let rows,officeWarning=false;
   try{
-    const response=await fetch('/api/office-updates',{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`},signal:AbortSignal.timeout(20000)});
+    const load=()=>fetch('/api/office-updates',{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`},signal:AbortSignal.timeout(20000)});let response=await load();if(response.status===401){await ensureSession(true);response=await load();}
     if(!response.ok)throw Error('Sincronização pendente');const result=await response.json();
     if(!Array.isArray(result.rows)||result.rows.length!==1)throw Error('Resposta inválida');rows=result.rows;
   }catch(error){if(!OfficeAccess.role(session.user)?.admin)throw Error('O acesso individual ainda precisa ser ativado pelo administrador no banco de dados.');officeWarning=true;rows=await request('/rest/v1/dashboards?id=eq.1&select=data,revision');}
