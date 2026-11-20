@@ -11,14 +11,14 @@
  const importCache=new WeakMap();function importDays(data){if(importCache.has(data))return importCache.get(data);const dates=new Set((data.imports||[]).map(i=>F.day(i.importedAt)));for(const b of data.base||[])for(const p of b.importedPublications||[])if(!p.superseded&&!p.referenceOnly){dates.add(F.day(p.importedAt));dates.add(F.day(p.lastImportedAt));}for(const e of data.activityLog||[])if(e.kind==='import'&&e.importKey)dates.add(F.day(e.at));dates.delete('');const counts=new Map([...dates].map(date=>[date,I.cases(data,date).length]));importCache.set(data,counts);return counts;}
  function effective(d){return d.status==='done'&&d.kind!=='followup'&&d.completionReport?.type!=='acknowledgement'&&!!F.day(d.completedAt);}
  function monthly(data,month){
-  const list=F.all(data),received=new Map(),rows=names(data,list).map(lawyer=>({lawyer,publications:0,effective:0,open:0,done:0,total:0})),byName=new Map(rows.map(row=>[row.lawyer,row]));
+  const list=F.all(data),received=new Map(),rows=names(data,list).map(lawyer=>({lawyer,publications:0,effective:0,acknowledged:0,open:0,done:0,total:0})),byName=new Map(rows.map(row=>[row.lawyer,row]));
   const count=(lawyers,field)=>{for(const lawyer of lawyers){const row=byName.get(lawyer);if(row)row[field]++;}};
-  if(!/^\d{4}-\d{2}$/.test(month||''))return {month,rows,publications:0,effective:0,open:0,done:0};
+  if(!/^\d{4}-\d{2}$/.test(month||''))return {month,rows,publications:0,effective:0,acknowledged:0,open:0,done:0};
   for(const [date] of importDays(data)){if(!date.startsWith(month+'-'))continue;const records=F.forImportDay(data,date);for(const b of I.cases(data,date)){const lawyers=[...new Set(records.filter(d=>d.caseId===b.id).flatMap(owners))];for(const pub of I.publications(data,b.id,date)){const key=b.id+'|'+(pub.fingerprint||((pub.publicationRef||'')+'|'+(pub.text||'')));if(!received.has(key))received.set(key,{lawyers,count:pub.publicationRef?1:P.references(pub.text).length||1});else received.get(key).lawyers=[...new Set([...received.get(key).lawyers,...lawyers])];}}}
-  let publications=0,completed=0,open=0,done=0;
+  let publications=0,completed=0,acknowledged=0,open=0,done=0;
   for(const item of received.values()){publications+=item.count;for(let n=0;n<item.count;n++)count(item.lawyers,'publications');}
-  for(const d of list){if(effective(d)&&F.day(d.completedAt).startsWith(month+'-')){completed++;count(owners(d),'effective');}if(F.isDeadline(d)&&d.status!=='cancelled'&&d.date.startsWith(month+'-')){if(d.status==='pending'){open++;count(owners(d),'open');}else if(d.status==='done'){done++;count(owners(d),'done');}count(owners(d),'total');}}
-  return {month,rows,publications,effective:completed,open,done};
+  for(const d of list){if(d.status==='done'&&d.completionReport?.type==='acknowledgement'&&F.day(d.completedAt).startsWith(month+'-')){acknowledged++;count(owners(d),'acknowledged');}if(effective(d)&&F.day(d.completedAt).startsWith(month+'-')){completed++;count(owners(d),'effective');}if(F.isDeadline(d)&&d.status!=='cancelled'&&d.date.startsWith(month+'-')){if(d.status==='pending'){open++;count(owners(d),'open');}else if(d.status==='done'){done++;count(owners(d),'done');}count(owners(d),'total');}}
+  return {month,rows,publications,effective:completed,acknowledged,open,done};
  }
  const api={due,imported,importDays,monthly,effective};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DeadlineSummary=api;
 })(typeof window==='undefined'?globalThis:window);
